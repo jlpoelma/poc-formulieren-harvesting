@@ -1,0 +1,35 @@
+<h1>We will have rdflib here</h1>
+
+<button type="button" {{on "click" this.loadData}}>Load data</button>
+<button type="button" {{on "click" this.findForms}}>Find forms</button>
+<button type="button" {{on "click" this.findFormsRelatedTriples}}>Forms related triples</button>
+<button type="button" {{on "click" this.walkForms}}>Walk forms</button>
+
+<button type="button" {{on "click" this.toggleTableSize}}>{{#if this.smallTable}}expand{{else}}collapse{{/if}}</button>
+{{#each this.graphGroupedTriples as |graphInfo|}}
+  <h2>{{graphInfo.graph}}</h2>
+
+  {{#if this.largeTable}}
+    <TriplesTable @triples={{graphInfo.triples}} />
+  {{/if}}
+{{/each}}
+
+
+<h1>Forms</h1>
+
+<ul>
+  {{#each this.forms as |form|}}
+    <li>{{form.subject}}</li>
+  {{/each}}
+</ul>
+
+{{#if this.formsRelatedTriples.length}}
+  <TriplesTable @triples={{this.formsRelatedTriples}} />
+{{/if}}
+
+
+<h1>Dataset triples</h1>
+
+{{#if this.datasetTriples.length}}
+  <TriplesTable @triples={{this.datasetTriples}} />
+{{/if}}

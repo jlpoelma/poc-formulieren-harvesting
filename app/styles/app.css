@@ -1,0 +1,12 @@
+tbody > tr:nth-child(even) {
+    background-color: #eee;
+}
+
+tbody > tr {
+    font-size: smaller;
+}
+
+td {
+    border-right: solid grey 1px;
+    border-left: solid grey 1px;
+}

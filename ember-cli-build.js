@@ -1,10 +1,29 @@
 'use strict';
 
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
+const WrapperPlugin = require('wrapper-webpack-plugin');
 
 module.exports = function(defaults) {
   let app = new EmberApp(defaults, {
-    // Add options here
+    
+    webpack: {
+      externals: {
+        '@trust/webcrypto': 'crypto',
+        'child_process': 'null',
+        'node-fetch': 'fetch',
+        'text-encoding': 'TextEncoder',
+        'whatwg-url': 'window',
+        'isomorphic-fetch': 'fetch',
+        'fs': 'null',
+        'solid-auth-client': {
+          root: ['solid', 'auth'],
+          commonjs: 'solid-auth-client',
+          commonjs2: 'solid-auth-client',
+        },
+        'solid-auth-cli': 'null',
+        'xmldom': 'window'
+      }
+    }
   });
 
   // Use `app.import` to add additional libraries to the generated

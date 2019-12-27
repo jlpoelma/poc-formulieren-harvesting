@@ -1,0 +1,16 @@
+<table>
+  <thead>
+    <tr>
+      <th>Subject</th><th>Predicate</th><th>Object</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each @triples as |triple|}}
+      <tr>
+        <td>{{triple.subject}}</td>
+        <td>{{triple.predicate}}</td>
+        <td>{{triple.object}}</td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
