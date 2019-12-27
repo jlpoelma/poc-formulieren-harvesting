@@ -1,6 +1,6 @@
 import { RDF, FORM, SHACL } from '../utils/namespaces';
 
-export default function( { store, formGraph, sourceGraph, sourceNode } ) {
+function importTriplesForForm( { store, formGraph, sourceGraph, sourceNode } ) {
     let datasetTriples = [];
 
   // get form
@@ -107,3 +107,6 @@ function triplesForComplexPath( options ) {
   
   return datasetTriples;
 }
+
+export default importTriplesForForm;
+export { triplesForPath };
