@@ -101,6 +101,8 @@ export default class GimmeRdflibComponent extends Component {
       sourceGraph: SOURCE_GRAPH,
       sourceNode: SOURCE_NODE
     } );
+
+    console.log("Done!");
   }
 
   @action
