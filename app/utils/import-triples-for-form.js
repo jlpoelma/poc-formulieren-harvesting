@@ -20,7 +20,7 @@ function importTriplesForForm( { store, formGraph, sourceGraph, sourceNode } ) {
   fields = [].concat(...fields);
 
   for( let field of fields ) {
-    let triples = triplesForPath( {
+    let { triples } = triplesForPath( {
       path: store.any( field, SHACL("path"), undefined, formGraph ),
       store, formGraph, sourceNode, sourceGraph
     });
@@ -34,6 +34,8 @@ function importTriplesForForm( { store, formGraph, sourceGraph, sourceNode } ) {
 function triplesForPath( options ){
   const { store, path, formGraph, sourceNode, sourceGraph } = options;
   
+  let solutions = {};
+
   if( path && path.termType === "Collection" ) {
     return triplesForComplexPath( options );
   } else {
@@ -52,7 +54,7 @@ function triplesForSimplePath( options ) {
         datasetTriples.push(item);
       } );
   }
-  return datasetTriples;
+  return { triples: datasetTriples, values: datasetTriples.map( ({object}) => object ) };
 }
 
 function triplesForComplexPath( options ) {
@@ -104,8 +106,13 @@ function triplesForComplexPath( options ) {
     startingPoints = nextStartingPoints;
     nextPathElements = restPathElements;
   }
-  
-  return datasetTriples;
+
+  // (this is reduntant, if there are no startingPoints values will
+  // always be an array, but it's more obvious ;-)
+  if( nextPathElements.length == 0 )
+    return { triples: datasetTriples, values: startingPoints };
+  else
+    return { triples: datasetTriples, values: [] };
 }
 
 export default importTriplesForForm;
