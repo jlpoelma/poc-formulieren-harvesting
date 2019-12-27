@@ -4,14 +4,13 @@ import Component from '@glimmer/component';
 import rdflib from '../utils/rdflib';
 import dilbeek from '../utils/dilbeek';
 import form from '../utils/besluitenlijst-formulier';
+import importTriplesForForm from '../utils/import-triples-for-form';
+import { RDF, FORM, SHACL } from '../utils/namespaces';
 
 const dedup = function(arr){
   return [...new Set(arr)];
 }
 
-const RDF = new rdflib.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-const FORM = new rdflib.Namespace("http://lblod.data.gift/vocabularies/forms/");
-const SHACL = new rdflib.Namespace("http://www.w3.org/ns/shacl#");
 
 export default class GimmeRdflibComponent extends Component {
   store = null;
@@ -93,94 +92,16 @@ export default class GimmeRdflibComponent extends Component {
 
   @action
   walkForms(){
-    // setup
     const FORM_GRAPH = new rdflib.NamedNode("http://mu.semte.ch/form");
     const SOURCE_GRAPH = new rdflib.NamedNode("http://mu.semte.ch/dilbeek");
     const SOURCE_NODE = new rdflib.NamedNode("http://mu.semte.ch/vocabularies/ext/besluitenlijsten/208ee6e0-28b1-11ea-972c-8915ff690069");
-    this.datasetTriples = [];
 
-    // get form
-    const forms = this
-          .store
-          .match(undefined, RDF("type"), FORM("Form"), FORM_GRAPH)
-          .map(({subject}) => subject);
-
-    // get field groups
-    let fieldGroups = forms.map( (form) => this.store.match( form, FORM("hasFieldGroup"), undefined, FORM_GRAPH ) );
-    fieldGroups = [].concat(...fieldGroups);
-    fieldGroups = fieldGroups.map( ({object}) => object );
-
-    // get fields
-    let fields = fieldGroups.map( (fieldGroup) => this
-                                  .store
-                                  .match( fieldGroup, FORM("hasField"), undefined, FORM_GRAPH )
-                                  .map( ({object}) => object ) );
-    fields = [].concat(...fields);
-
-    for( let field of fields ) {
-      let path = this.store.any( field, SHACL("path"), undefined, FORM_GRAPH );
-
-      if( path && path.termType === "Collection" ) {
-        // INGEST COMPLEX PATH
-        console.log(path);
-
-        const pathElements =
-              path
-              .elements
-              .map( (element) => {
-                if( element.termType == "NamedNode" ) {
-                  return { path: element };
-                } else {
-                  const elementInfo = this.store.any( element, SHACL("inversePath"), undefined, FORM_GRAPH );
-                  return { inversePath: elementInfo };
-                }
-              } );
-
-        let startingPoints = [ SOURCE_NODE ];
-        let nextPathElements = pathElements;
-        while( startingPoints && nextPathElements.length ) {
-          let [ currentPathElement, ...restPathElements ] = nextPathElements;
-          let nextStartingPoints = [];
-          
-          for( let startingPoint of startingPoints ) {
-            if( currentPathElement.inversePath ) {
-              this
-                .store
-                .match( undefined, currentPathElement.inversePath, startingPoint, SOURCE_GRAPH )
-                .map( (triple) => {
-                  this.datasetTriples.push(triple);
-                  nextStartingPoints.push( triple.subject );
-                });
-            } else {
-              this
-                .store
-                .match( startingPoint, currentPathElement.path, undefined, SOURCE_GRAPH )
-                .map( (triple) => {
-                  this.datasetTriples.push(triple);
-                  nextStartingPoints.push( triple.object );
-                });
-            }
-          }
-
-          startingPoints = nextStartingPoints;
-          nextPathElements = restPathElements;
-        }
-        
-      } else {
-        // INGEST SIMPLE PATH
-        if( path ) {
-          this
-            .store
-            .match(SOURCE_NODE, path, undefined, SOURCE_GRAPH)
-            .map( (item) => {
-              // console.log( item );
-              this.datasetTriples.push(item);
-            } );
-        }
-      }
-    }
-
-    console.log( this.datasetTriples );
+    this.datasetTriples = importTriplesForForm({
+      store: this.store,
+      formGraph: FORM_GRAPH,
+      sourceGraph: SOURCE_GRAPH,
+      sourceNode: SOURCE_NODE
+    } );
   }
 
   @action
