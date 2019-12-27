@@ -9,8 +9,7 @@ import { RDF, FORM, SHACL } from '../utils/namespaces';
 
 const dedup = function(arr){
   return [...new Set(arr)];
-}
-
+};
 
 export default class GimmeRdflibComponent extends Component {
   store = null;
@@ -63,7 +62,7 @@ export default class GimmeRdflibComponent extends Component {
     // this.store.clear();
     rdflib.parse( dilbeek, this.store, "http://mu.semte.ch/dilbeek", "text/html" );
     rdflib.parse( form, this.store, "http://mu.semte.ch/form", "text/turtle" );
-    
+
     this.statements = this.store.statements;
 
     // const BESLUIT = new rdflib.Namespace("http://data.vlaanderen.be/ns/besluit#");

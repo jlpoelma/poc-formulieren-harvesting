@@ -33,7 +33,7 @@ export default function( { store, formGraph, sourceGraph, sourceNode } ) {
 
 function triplesForPath( options ){
   const { store, path, formGraph, sourceNode, sourceGraph } = options;
-  
+
   if( path && path.termType === "Collection" ) {
     return triplesForComplexPath( options );
   } else {
@@ -58,7 +58,7 @@ function triplesForSimplePath( options ) {
 function triplesForComplexPath( options ) {
   const { store, path, formGraph, sourceNode, sourceGraph } = options;
   let datasetTriples = [];
-  
+
   // Convert PATH list to comprehensible objects
   const pathElements =
         path
@@ -79,7 +79,7 @@ function triplesForComplexPath( options ) {
     // walk one segment of the path list
     let [ currentPathElement, ...restPathElements ] = nextPathElements;
     let nextStartingPoints = [];
-    
+
     for( let startingPoint of startingPoints ) {
       if( currentPathElement.inversePath ) {
         // inverse path, walk in other direction
@@ -104,6 +104,6 @@ function triplesForComplexPath( options ) {
     startingPoints = nextStartingPoints;
     nextPathElements = restPathElements;
   }
-  
+
   return datasetTriples;
 }
