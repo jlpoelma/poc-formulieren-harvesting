@@ -1,7 +1,20 @@
 import { RDF, FORM, SHACL } from '../utils/namespaces';
 
 function importTriplesForForm( { store, formGraph, sourceGraph, sourceNode } ) {
-    let datasetTriples = [];
+  let datasetTriples = [];
+
+  for( let field of fieldsForForm( { store, formGraph } ) ) {
+    let path = store.any( field, SHACL("path"), undefined, formGraph );
+    triplesForPath({ path, store, formGraph, sourceNode, sourceGraph })
+      .triples
+      .forEach( (item) => datasetTriples.push(item) );
+  }
+
+  return datasetTriples;
+}
+
+function fieldsForForm( options ) {
+  let { store, formGraph } = options;
 
   // get form
   const forms = store
@@ -17,18 +30,7 @@ function importTriplesForForm( { store, formGraph, sourceGraph, sourceNode } ) {
   let fields = fieldGroups.map( (fieldGroup) => store
                                 .match( fieldGroup, FORM("hasField"), undefined, formGraph )
                                 .map( ({object}) => object ) );
-  fields = [].concat(...fields);
-
-  for( let field of fields ) {
-    let { triples } = triplesForPath( {
-      path: store.any( field, SHACL("path"), undefined, formGraph ),
-      store, formGraph, sourceNode, sourceGraph
-    });
-
-    triples.forEach( (item) => datasetTriples.push(item) );
-  }
-
-  return datasetTriples;
+  return [].concat(...fields);
 }
 
 function triplesForPath( options ){
@@ -116,4 +118,4 @@ function triplesForComplexPath( options ) {
 }
 
 export default importTriplesForForm;
-export { triplesForPath };
+export { triplesForPath, fieldsForForm };
