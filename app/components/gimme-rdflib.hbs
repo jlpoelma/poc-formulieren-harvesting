@@ -4,6 +4,8 @@
 <button type="button" {{on "click" this.findForms}}>Find forms</button>
 <button type="button" {{on "click" this.findFormsRelatedTriples}}>Forms related triples</button>
 <button type="button" {{on "click" this.walkForms}}>Walk forms</button>
+<button type="button" {{on "click" this.renderForms}}>Render forms</button>
+
 
 <button type="button" {{on "click" this.toggleTableSize}}>{{#if this.smallTable}}expand{{else}}collapse{{/if}}</button>
 {{#each this.graphGroupedTriples as |graphInfo|}}
@@ -35,3 +37,10 @@
 {{#if this.datasetTriples.length}}
   <TriplesTable @triples={{this.datasetTriples}} />
 {{/if}}
+
+<h1>Rendered Forms</h1>
+{{#each this.formFieldsData as |formField|}}
+  {{#each formField.values as |value|}}
+    {{component (component-for-display-type-edit formField.displayType.value) data=value }}
+  {{/each}}
+{{/each}}

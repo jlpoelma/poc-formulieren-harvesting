@@ -5,6 +5,7 @@ import rdflib from '../utils/rdflib';
 import dilbeek from '../utils/dilbeek';
 import form from '../utils/besluitenlijst-formulier';
 import importTriplesForForm from '../utils/import-triples-for-form';
+import { triplesForPath, fieldsForForm } from '../utils/import-triples-for-form';
 import { RDF, FORM, SHACL } from '../utils/namespaces';
 
 const dedup = function(arr){
@@ -28,6 +29,9 @@ export default class GimmeRdflibComponent extends Component {
 
   @tracked
   formsRelatedTriples = [];
+
+  @tracked
+  formFieldsData = [];
 
   get largeTable(){
     return !this.smallTable;
@@ -108,5 +112,28 @@ export default class GimmeRdflibComponent extends Component {
   @action
   toggleTableSize(){
     this.smallTable = !this.smallTable;
+  }
+
+  @action
+  renderForms(){
+    const FORM_GRAPH = new rdflib.NamedNode("http://mu.semte.ch/form");
+    const SOURCE_GRAPH = new rdflib.NamedNode("http://mu.semte.ch/dilbeek");
+    const SOURCE_NODE = new rdflib.NamedNode("http://mu.semte.ch/vocabularies/ext/besluitenlijsten/208ee6e0-28b1-11ea-972c-8915ff690069");
+
+    let fieldsUri = fieldsForForm({
+      store: this.store,
+      formGraph: FORM_GRAPH
+    });
+
+    this.formFieldsData = fieldsUri.map( uri => {
+      let path = this.store.any( uri, SHACL("path"), undefined, FORM_GRAPH);
+      let displayType = this.store.any( uri, FORM("displayType"), undefined, FORM_GRAPH);
+
+      let values = triplesForPath({
+        store: this.store, path, formGraph: FORM_GRAPH, sourceNode: SOURCE_NODE, sourceGraph: SOURCE_GRAPH
+      }).values;
+
+      return { displayType, values };
+    });
   }
 }
