@@ -5,6 +5,7 @@
 <button type="button" {{on "click" this.findFormsRelatedTriples}}>Forms related triples</button>
 <button type="button" {{on "click" this.walkForms}}>Walk forms</button>
 <button type="button" {{on "click" this.renderForms}}>Render forms</button>
+<button type="button" {{on "click" this.validateForms}}>Validate forms</button>
 
 
 <button type="button" {{on "click" this.toggleTableSize}}>{{#if this.smallTable}}expand{{else}}collapse{{/if}}</button>
@@ -42,5 +43,12 @@
 {{#each this.formFieldsData as |formField|}}
   {{#each formField.values as |value|}}
     {{component (component-for-display-type-edit formField.displayType.value) data=value }}
+  {{/each}}
+{{/each}}
+
+<h1>Validated form fields</h1>
+{{#each this.validatedFormFieldsData as |formField|}}
+  {{#each formField.values as |value|}}
+    {{component (component-for-display-type-edit formField.displayType.value) data=value validationResult=formField.validationResults}}
   {{/each}}
 {{/each}}
