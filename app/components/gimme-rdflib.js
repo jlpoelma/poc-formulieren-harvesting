@@ -185,9 +185,9 @@ export default class GimmeRdflibComponent extends Component {
 
         if( groupingType == FORM("Bag").value ) {
           validationResult = validator( values, options );
-        } else if( groupingType == FORM("AnyMatch").value ) {
+        } else if( groupingType == FORM("MatchSome").value ) {
           validationResult = values.some( (value) => validator( value, options ) );
-        } else if( groupingType == FORM("AllMatch" .value) ) {
+        } else if( groupingType == FORM("MatchEvery" .value) ) {
           validationResult = values.every( (value) => validator( value, options ) );
         }
 

@@ -1,5 +1,5 @@
 export default `@prefix form: <http://lblod.data.gift/vocabularies/forms/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#>.
 @prefix dct: <http://purl.org/dc/terms/> .
 @prefix mu: <http://mu.semte.ch/vocabularies/core/> .
 @prefix : <http://data.lblod.info/forms/> .
@@ -27,10 +27,13 @@ fields:submissionType a form:Field ;
     sh:path rdf:type ;
     form:validations
       [ a form:RequiredConstraint ;
+        form:grouping form:Bag ;
         sh:path rdf:type ],
-      [ a form:EqualConstraint ;
+      [ a form:SingleCodelistValue ;
+        form:grouping form:Bag ;
         sh:path rdf:type ;
-      form:customValue <http://data.lblod.info/DecisionType/46b254008bbca1354e632dc40cf550c6b313e523799cafd7200a48a19e09249f> ] ;
+        form:conceptScheme <https://data.vlaanderen.be/id/conceptscheme/BesluitDocumentType> ;
+        form:customValue <http://data.lblod.info/DecisionType/46b254008bbca1354e632dc40cf550c6b313e523799cafd7200a48a19e09249f> ] ;
     form:displayType displayTypes:defaultInput ;
     form:options """{ value: \"http://data.lblod.info/DecisionType/46b254008bbca1354e632dc40cf550c6b313e523799cafd7200a48a19e09249f\" }""" .
 
@@ -41,8 +44,10 @@ fields:administrativeBody a form:Field ;
     sh:path eli:passed_by ;
     form:validations
       [ a form:AdminstrativeUnitCodelistConstraint ;
+        form:grouping form:MatchEvery ;
         sh:path eli:passed_by ],
       [ a form:RequiredConstraint ;
+        form:grouping form:Bag ;
         sh:path eli:passed_by ] ;
     form:displayType displayTypes:bestuursorgaanSelect .
 
@@ -53,8 +58,10 @@ fields:meetingDate a form:Field ;
     sh:path ( [ sh:inversePath besluit:heeftBesluitenlijst ] prov:startedAtTime ) ;
     form:validations
       [ a form:RequiredConstraint ;
+        form:grouping form:Bag ;
         sh:path ( [ sh:inversePath besluit:heeftBesluitenlijst ] prov:startedAtTime ) ],
       [ a sh:PropertyShape ;
+        form:grouping form:MatchEvery ;
         sh:path ( [ sh:inversePath besluit:heeftBesluitenlijst ] prov:startedAtTime ) ;
         sh:dataType xsd:dateTime ;
         sh:nodeKind sh:Literal ] ;
@@ -67,8 +74,10 @@ fields:publicationDate a form:Field ;
     sh:path eli:date_publication ;
     form:validations
       [ a form:RequiredConstraint ;
+        form:grouping form:Bag ;
         sh:path eli:date_publication ],
       [ a sh:PropertyShape ;
+        form:grouping form:MatchSome ;
         sh:path eli:date_publication ;
         sh:dataType xsd:date ;
         sh:nodeKind sh:Literal ] ;
@@ -78,5 +87,8 @@ fields:filesAndLinks a form:Field ;
     mu:uuid "fd7422a5-da17-4b20-a4dd-a364b77178bf" ;
     sh:name "Bestanden of URLs" ;
     sh:order 5 ;
-    form:validations [ a form:FilesOrLinksConstraint ] ;
-    form:displayType displayTypes:filesAndLinks .`;
+    form:validations [
+        a form:FilesOrLinksConstraint ;
+        form:grouping form:Bag ] ;
+    form:displayType displayTypes:filesAndLinks .
+`;
