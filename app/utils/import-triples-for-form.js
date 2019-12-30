@@ -1,9 +1,10 @@
 import { RDF, FORM, SHACL } from '../utils/namespaces';
+import { check } from './constraints';
 
-function importTriplesForForm( { store, formGraph, sourceGraph, sourceNode } ) {
+function importTriplesForForm( { store, formGraph, sourceGraph, sourceNode, metaGraph } ) {
   let datasetTriples = [];
 
-  for( let field of fieldsForForm( { store, formGraph } ) ) {
+  for( let field of fieldsForForm( { store, formGraph, sourceGraph, sourceNode, metaGraph } ) ) {
     let path = store.any( field, SHACL("path"), undefined, formGraph );
     triplesForPath({ path, store, formGraph, sourceNode, sourceGraph })
       .triples
@@ -14,7 +15,7 @@ function importTriplesForForm( { store, formGraph, sourceGraph, sourceNode } ) {
 }
 
 function fieldsForForm( options ) {
-  let { store, formGraph } = options;
+  let { store, formGraph, sourceGraph, sourceNode, metaGraph } = options;
 
   // get form
   const forms = store
@@ -26,11 +27,53 @@ function fieldsForForm( options ) {
   fieldGroups = [].concat(...fieldGroups);
   fieldGroups = fieldGroups.map( ({object}) => object );
 
-  // get fields
-  let fields = fieldGroups.map( (fieldGroup) => store
-                                .match( fieldGroup, FORM("hasField"), undefined, formGraph )
-                                .map( ({object}) => object ) );
-  return [].concat(...fields);
+  // get all fields recursively
+  let allFields = [];
+  let newFields = [];
+
+  while( fieldGroups.length > 0 ) {
+    // add fields
+    newFields = [];
+    for( const fieldGroup of fieldGroups )
+      newFields.push( ...fieldsForFieldGroup( fieldGroup, options ));
+
+    allFields.push( ...newFields );
+
+    // calculate conditional groups
+    let conditionalFieldGroups =
+        newFields.map( (field) => {
+          return store
+            .match( field, FORM("hasConditionalFieldGroup"), undefined, formGraph )
+            .map( ({ object }) => object );
+        });
+    conditionalFieldGroups = [].concat( ...conditionalFieldGroups );
+
+    // add matching conditional field groups
+    let newFieldGroups =
+        conditionalFieldGroups
+        .filter( (group) => {
+          return store
+            .match( group, FORM("conditions"), undefined, formGraph )
+            .every( ({object}) => check( object, { formGraph, sourceNode, sourceGraph, metaGraph, store } ) );
+        } )
+        .map( (group) => {
+          return store
+            .match( group, FORM("hasFieldGroup"), undefined, formGraph )
+            .map( ({object}) => object );
+        });
+    newFieldGroups = [].concat( ...newFieldGroups );
+    fieldGroups = newFieldGroups;
+  }
+
+  return allFields;
+}
+
+function fieldsForFieldGroup( fieldGroup, options ) {
+  const { store, formGraph } = options;
+
+  return store
+    .match( fieldGroup, FORM("hasField"), undefined, formGraph )
+    .map( ({object}) => object );
 }
 
 function triplesForPath( options ){
