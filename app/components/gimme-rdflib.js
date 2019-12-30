@@ -115,7 +115,8 @@ export default class GimmeRdflibComponent extends Component {
       store: this.store,
       formGraph: FORM_GRAPH,
       sourceGraph: SOURCE_GRAPH,
-      sourceNode: SOURCE_NODE
+      sourceNode: SOURCE_NODE,
+      metaGraph: META_GRAPH
     } );
 
     console.log("Done!");
@@ -131,7 +132,10 @@ export default class GimmeRdflibComponent extends Component {
 
     let fieldsUri = fieldsForForm({
       store: this.store,
-      formGraph: FORM_GRAPH
+      formGraph: FORM_GRAPH,
+      sourceGraph: SOURCE_GRAPH,
+      sourceNode: SOURCE_NODE,
+      metaGraph: META_GRAPH
     });
 
     this.formFieldsData = fieldsUri.map(this.generateFormFieldData.bind(this));
@@ -154,7 +158,10 @@ export default class GimmeRdflibComponent extends Component {
 
     let fieldsUri = fieldsForForm({
       store: this.store,
-      formGraph: FORM_GRAPH
+      formGraph: FORM_GRAPH,
+      sourceGraph: SOURCE_GRAPH,
+      sourceNode: SOURCE_NODE,
+      metaGraph: META_GRAPH
     });
 
     let formFieldsData = [];

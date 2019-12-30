@@ -41,14 +41,10 @@
 
 <h1>Rendered Forms</h1>
 {{#each this.formFieldsData as |formField|}}
-  {{#each formField.values as |value|}}
-    {{component (component-for-display-type-edit formField.displayType.value) data=value }}
-  {{/each}}
+  {{component (component-for-display-type-edit formField.displayType.value) data=formField.values validationResult=formField.validationResults}}
 {{/each}}
 
 <h1>Validated form fields</h1>
 {{#each this.validatedFormFieldsData as |formField|}}
-  {{#each formField.values as |value|}}
-    {{component (component-for-display-type-edit formField.displayType.value) data=value validationResult=formField.validationResults}}
-  {{/each}}
+  {{component (component-for-display-type-edit formField.displayType.value) data=formField.values validationResult=formField.validationResults}}
 {{/each}}
