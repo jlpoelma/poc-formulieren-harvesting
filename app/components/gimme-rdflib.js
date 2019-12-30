@@ -10,6 +10,7 @@ import { triplesForPath, fieldsForForm } from '../utils/import-triples-for-form'
 import { RDF, FORM, SHACL } from '../utils/namespaces';
 import constraintForUri from '../utils/constraints';
 import { check } from '../utils/constraints';
+import { createPropertyTreeFromFields } from '../utils/model-factory';
 
 const dedup = function(arr){
   return [...new Set(arr)];
@@ -43,6 +44,9 @@ export default class GimmeRdflibComponent extends Component {
 
   @tracked
   validatedFormFieldsData = [];
+
+  @tracked
+  propertyGroups = [];
 
   get largeTable(){
     return !this.smallTable;
@@ -190,6 +194,18 @@ export default class GimmeRdflibComponent extends Component {
     };
 
     this.validatedFormFieldsData = formFieldsData;
+  }
 
+  @action
+  getPropertyGroups() {
+    let fieldUris = fieldsForForm({
+      store: this.store,
+      formGraph: FORM_GRAPH,
+      sourceGraph: SOURCE_GRAPH,
+      sourceNode: SOURCE_NODE,
+      metaGraph: META_GRAPH
+    });
+
+    this.propertyGroups = createPropertyTreeFromFields( fieldUris, { store: this.store, formGraph: FORM_GRAPH } );
   }
 }

@@ -2,6 +2,7 @@ export default `@prefix form: <http://lblod.data.gift/vocabularies/forms/> .
 @prefix sh: <http://www.w3.org/ns/shacl#>.
 @prefix dct: <http://purl.org/dc/terms/> .
 @prefix mu: <http://mu.semte.ch/vocabularies/core/> .
+@prefix ext: <http://mu.semte.ch/vocabularies/ext/> .
 @prefix : <http://data.lblod.info/forms/> .
 @prefix fieldGroups: <http://data.lblod.info/field-groups/> .
 @prefix fields: <http://data.lblod.info/fields/> .
@@ -35,7 +36,8 @@ fields:submissionType a form:Field ;
         form:conceptScheme <https://data.vlaanderen.be/id/conceptscheme/BesluitDocumentType> ;
         form:customValue <http://data.lblod.info/DecisionType/46b254008bbca1354e632dc40cf550c6b313e523799cafd7200a48a19e09249f> ] ;
     form:displayType displayTypes:defaultInput ;
-    form:options """{ value: \"http://data.lblod.info/DecisionType/46b254008bbca1354e632dc40cf550c6b313e523799cafd7200a48a19e09249f\" }""" .
+    form:options """{ value: \"http://data.lblod.info/DecisionType/46b254008bbca1354e632dc40cf550c6b313e523799cafd7200a48a19e09249f\" }""" ;
+    sh:group fields:propertyGroupSubmissionType.
 
 fields:administrativeBody a form:Field ;
     mu:uuid "bffbea8d-e55b-4e3d-86e8-ba7aaee7863d" ;
@@ -49,7 +51,8 @@ fields:administrativeBody a form:Field ;
       [ a form:RequiredConstraint ;
         form:grouping form:Bag ;
         sh:path eli:passed_by ] ;
-    form:displayType displayTypes:bestuursorgaanSelect .
+    form:displayType displayTypes:bestuursorgaanSelect ;
+    sh:group fields:anIntermediatePropertyGroup .
 
 fields:meetingDate a form:Field ;
     mu:uuid "3dd6ed93-40f7-4d70-a6cb-f4de53dc8bfb" ;
@@ -65,7 +68,8 @@ fields:meetingDate a form:Field ;
         sh:path ( [ sh:inversePath besluit:heeftBesluitenlijst ] prov:startedAtTime ) ;
         sh:dataType xsd:dateTime ;
         sh:nodeKind sh:Literal ] ;
-    form:displayType displayTypes:dateTime .
+    form:displayType displayTypes:dateTime ;
+    sh:group fields:anIntermediatePropertyGroup .
 
 fields:publicationDate a form:Field ;
     mu:uuid "0a63d06f-235c-463c-9ffb-fe31647517b6" ;
@@ -81,14 +85,57 @@ fields:publicationDate a form:Field ;
         sh:path eli:date_publication ;
         sh:dataType xsd:date ;
         sh:nodeKind sh:Literal ] ;
-    form:displayType displayTypes:date .
+    form:displayType displayTypes:date ;
+    form:hasConditionalFieldGroup fields:humanPublicationConditionalGroup ;
+    sh:group fields:anIntermediatePropertyGroup .
+
+fields:humanPublicationConditionalGroup a form:ConditionalFieldGroup ;
+    form:conditions
+      [ a form:RequiredConstraint ;
+        form:grouping form:Bag ;
+        sh:path eli:date_publication ] ;
+    form:hasFieldGroup
+      [ a form:FieldGroup ;
+        form:hasField fields:humanPublicationUrl ] .
+
+fields:humanPublicationUrl a form:Field ;
+    mu:uuid "aff7faf3-361a-4723-b3f3-0ad8d431eb95" ;
+    sh:name "Menselijke URL voor publicatie" ;
+    sh:order 5 ;
+    sh:path ext:humanPublicationUrl ;
+    form:validations
+      [ a form:RequiredConstraint ;
+        form:grouping form:Bag ;
+        sh:path ext:humanPublicationUrl ] ;
+    form:displayType displayTypes:defaultInput ;
+    sh:group fields:aDynamicPropertyGroup .
 
 fields:filesAndLinks a form:Field ;
     mu:uuid "fd7422a5-da17-4b20-a4dd-a364b77178bf" ;
     sh:name "Bestanden of URLs" ;
-    sh:order 5 ;
+    sh:order 10 ;
     form:validations [
         a form:FilesOrLinksConstraint ;
         form:grouping form:Bag ] ;
-    form:displayType displayTypes:filesAndLinks .
+    form:displayType displayTypes:filesAndLinks ;
+    sh:group fields:anIntermediatePropertyGroup .
+
+fields:propertyGroupSubmissionType a form:PropertyGroup;
+    mu:uuid "8aa843d6-edc5-408a-a807-c12d13ac4f16";
+    sh:description "The first propertyGroup for type submission";
+    sh:order 1;
+    sh:name "PropertyGroup for submission type".
+
+fields:anIntermediatePropertyGroup a form:PropertyGroup;
+    mu:uuid "517df1bd-e23a-4d16-9e8f-8e428e095078";
+    sh:description "An intermediate property group";
+    sh:order 2;
+    sh:name "intermediatePropertyGroup".
+
+fields:aDynamicPropertyGroup a form:PropertyGroup;
+    mu:uuid "8c71b3db-db4b-45ea-8333-ab000adcca4e";
+    sh:description "A dynamic property group";
+    sh:order 3;
+    sh:name "aDynamicPropertyGroup".
+
 `;

@@ -6,6 +6,7 @@
 <button type="button" {{on "click" this.walkForms}}>Walk forms</button>
 <button type="button" {{on "click" this.renderForms}}>Render forms</button>
 <button type="button" {{on "click" this.validateForms}}>Validate forms</button>
+<button type="button" {{on "click" this.getPropertyGroups}}>Get propertygroups</button>
 
 
 <button type="button" {{on "click" this.toggleTableSize}}>{{#if this.smallTable}}expand{{else}}collapse{{/if}}</button>
@@ -45,6 +46,30 @@
 {{/each}}
 
 <h1>Validated form fields</h1>
+{{this.validatedFormFieldsData.length}}
 {{#each this.validatedFormFieldsData as |formField|}}
   {{component (component-for-display-type-edit formField.displayType.value) data=formField.values validationResult=formField.validationResults}}
+{{/each}}
+
+
+<h1>Rendered Property Groups</h1>
+  
+{{#each this.propertyGroups as |propertyGroup|}}
+  <p>
+    [{{propertyGroup.order}}] <b>{{propertyGroup.name}}</b>
+    <br />
+    {{propertyGroup.description}}
+  </p>
+
+  <ul>
+    {{#each propertyGroup.sortedFields as |field|}}
+      <li>
+        [{{field.order}}] <b>{{field.label}}</b>
+        <br />
+        This field is rendered as a {{field.displayType}} with options {{field.options}}.
+        <br />
+        {{field.description}}
+      </li>
+    {{/each}}
+  </ul>
 {{/each}}
