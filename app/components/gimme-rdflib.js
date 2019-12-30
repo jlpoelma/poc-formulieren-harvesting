@@ -9,6 +9,7 @@ import importTriplesForForm from '../utils/import-triples-for-form';
 import { triplesForPath, fieldsForForm } from '../utils/import-triples-for-form';
 import { RDF, FORM, SHACL } from '../utils/namespaces';
 import constraintForUri from '../utils/constraints';
+import { check } from '../utils/constraints';
 
 const dedup = function(arr){
   return [...new Set(arr)];
@@ -159,6 +160,7 @@ export default class GimmeRdflibComponent extends Component {
     let formFieldsData = [];
 
     for(let uri of fieldsUri){
+
       let path = this.store.any( uri, SHACL("path"), undefined, FORM_GRAPH);
 
       let validationConstraintUris = this.store
@@ -168,29 +170,8 @@ export default class GimmeRdflibComponent extends Component {
       let validationResults = [];
 
       for(let constraintUri of validationConstraintUris){
-        //detect type
-        const validationType = this.store.any(constraintUri, RDF('type'), undefined, FORM_GRAPH);
-        const groupingType = this.store.any(constraintUri, FORM("grouping"), undefined, FORM_GRAPH).value;
-
-        let validator = constraintForUri(validationType && validationType.value);
-        if( !validator ) continue;
-
-        let values = triplesForPath({
-          store: this.store, path, formGraph: FORM_GRAPH, sourceNode: SOURCE_NODE, sourceGraph: SOURCE_GRAPH
-        }).values;
-
         const options = { store: this.store, metaGraph: META_GRAPH, constraintUri: constraintUri };
-
-        let validationResult;
-
-        if( groupingType == FORM("Bag").value ) {
-          validationResult = validator( values, options );
-        } else if( groupingType == FORM("MatchSome").value ) {
-          validationResult = values.some( (value) => validator( value, options ) );
-        } else if( groupingType == FORM("MatchEvery" .value) ) {
-          validationResult = values.every( (value) => validator( value, options ) );
-        }
-
+        const validationResult = check( constraintUri, options);
         validationResults.push(validationResult);
       }
 
@@ -199,7 +180,6 @@ export default class GimmeRdflibComponent extends Component {
       const formData = this.generateFormFieldData(uri);
       formData.validationsResult = validationResults;
       formFieldsData.push(formData);
-
     };
 
     this.validatedFormFieldsData = formFieldsData;
