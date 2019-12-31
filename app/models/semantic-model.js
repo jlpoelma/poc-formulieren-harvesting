@@ -52,8 +52,10 @@ function property(options = {}) {
         switch (options.type) {
         case "string":
           object = new rdflib.Literal( value );
+          break;
         case "integer":
           object = new rdflib.Literal( value, null, XSD("decimal") );
+          break;
         }
         object = object ? object : new rdflib.Literal( value );
 
