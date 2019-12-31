@@ -1,5 +1,6 @@
 import { SHACL } from '../../utils/namespaces';
 import { tracked } from '@glimmer/tracking';
+import { get } from '@ember/object';
 
 export default class FormPropertyGroupModel {
   @tracked
@@ -22,7 +23,7 @@ export default class FormPropertyGroupModel {
   get sortedFields(){
     return this
       .fields
-      .sort( (a,b) => a.order > b.order );
+      .sort( (a,b) => get( a, "order" ) > get( b, "order" ) );
   }
   
 }

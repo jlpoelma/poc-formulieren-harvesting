@@ -1,5 +1,6 @@
 import { tracked } from '@glimmer/tracking';
 import { notifyPropertyChange } from '@ember/object';
+import { XSD } from '../utils/namespaces';
 import rdflib from '../utils/rdflib';
 
 function property(options = {}) {
@@ -34,7 +35,17 @@ function property(options = {}) {
       set(value) {
         const predicate = calculatePredicate(this);
         this.store.removeMatches(this.uri, predicate, undefined, graph || this.defaultGraph);
-        this.store.addStatement( new rdflib.Statement( this.uri, predicate, new rdflib.Literal( value ), graph || this.defaultGraph ) );
+
+        let object;
+        switch (options.type) {
+        case "string":
+          object = new rdflib.Literal( value );
+        case "integer":
+          object = new rdflib.Literal( value, null, XSD("decimal") );
+        }
+        object = object ? object : new rdflib.Literal( value );
+
+        this.store.addStatement( new rdflib.Statement( this.uri, predicate, object, graph || this.defaultGraph ) );
 
         notifyPropertyChange(this, propertyName);
       }
