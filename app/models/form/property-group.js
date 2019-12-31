@@ -23,7 +23,7 @@ export default class FormPropertyGroupModel {
   get sortedFields(){
     return this
       .fields
-      .sort( (a,b) => get( a, "order" ) > get( b, "order" ) );
+      .sort( (a,b) => a.order > b.order );
   }
   
 }

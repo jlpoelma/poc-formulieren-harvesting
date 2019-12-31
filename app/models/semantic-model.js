@@ -1,5 +1,5 @@
 import { tracked } from '@glimmer/tracking';
-import { notifyPropertyChange } from '@ember/object';
+import { get, set, notifyPropertyChange } from '@ember/object';
 import { XSD } from '../utils/namespaces';
 import rdflib from '../utils/rdflib';
 
@@ -12,6 +12,13 @@ function property(options = {}) {
       return resourceUri || ( options.ns && options.ns( propertyName ) ) || entity.defaultNamespace( propertyName );
     };
 
+    const cacheKey = `cache__${propertyName}`;
+
+    // The current implementation does a get/set of the property
+    // "cacheKey" which will make this autotrack the cached property.
+    // As such we don't need to manually call notifyPropertyChange.
+    // This does mean that we're trying to be smart about reading the
+    // property so that we don't accidentally overlap.
     return {
       enumerable: descriptor.enumerable,
       configurable: descriptor.configurable,
@@ -19,18 +26,23 @@ function property(options = {}) {
         const predicate = calculatePredicate(this);
         const response = this.store.any(this.uri, predicate, undefined, graph || this.defaultGraph);
         let value;
-        switch (options.type) {
-        case "string":
-          value = response && response.value;
-          break;
-        case "integer":
-          value = response && parseInt( response.value );
-          break;
-        case undefined:
-          value = response && response.value;
-          break;
+        if( this[cacheKey] !== undefined ) {
+          return get( this, cacheKey ); // register as a dependency
+        } else {
+          switch (options.type) {
+          case "string":
+            value = response && response.value;
+            break;
+          case "integer":
+            value = response && parseInt( response.value );
+            break;
+          case undefined:
+            value = response && response.value;
+            break;
+          }
+          set( this, cacheKey, value );
+          return get( this, cacheKey ); // register as a dependency after setting
         }
-        return value;
       },
       set(value) {
         const predicate = calculatePredicate(this);
@@ -46,8 +58,7 @@ function property(options = {}) {
         object = object ? object : new rdflib.Literal( value );
 
         this.store.addStatement( new rdflib.Statement( this.uri, predicate, object, graph || this.defaultGraph ) );
-
-        notifyPropertyChange(this, propertyName);
+        set( this, cacheKey, value ); // update dependent key
       }
     };
   };

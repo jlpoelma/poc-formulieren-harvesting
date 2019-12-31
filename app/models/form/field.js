@@ -10,7 +10,6 @@ export default class FormFieldModel extends SemanticModel {
   description = "";
 
   @integer()
-  // @tracked
   order = "";
 
   @string( { ns: FORM } )
