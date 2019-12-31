@@ -1,15 +1,15 @@
 import { tracked } from '@glimmer/tracking';
-import { get, set, notifyPropertyChange } from '@ember/object';
+import { get, set } from '@ember/object';
 import { XSD } from '../utils/namespaces';
 import rdflib from '../utils/rdflib';
 
 function property(options = {}) {
-  const resourceUri = options.uri;
+  const predicateUri = options.predicate;
   const graph = options.graph;
 
   return function(self, propertyName, descriptor) {
     const calculatePredicate = function(entity){
-      return resourceUri || ( options.ns && options.ns( propertyName ) ) || entity.defaultNamespace( propertyName );
+      return predicateUri || ( options.ns && options.ns( propertyName ) ) || entity.defaultNamespace( propertyName );
     };
 
     const cacheKey = `cache__${propertyName}`;
@@ -19,12 +19,13 @@ function property(options = {}) {
     // As such we don't need to manually call notifyPropertyChange.
     // This does mean that we're trying to be smart about reading the
     // property so that we don't accidentally overlap.
+
     return {
       enumerable: descriptor.enumerable,
       configurable: descriptor.configurable,
       get() {
         const predicate = calculatePredicate(this);
-        const response = this.store.any(this.uri, predicate, undefined, graph || this.defaultGraph);
+        const response = options.inverse ? this.store.any(undefined, predicate, this.uri, graph || this.defaultGraph) : this.store.any(this.uri, predicate, undefined, graph || this.defaultGraph);
         let value;
         if( this[cacheKey] !== undefined ) {
           return get( this, cacheKey ); // register as a dependency
@@ -35,6 +36,26 @@ function property(options = {}) {
             break;
           case "integer":
             value = response && parseInt( response.value );
+            break;
+          case "hasMany":
+            var matches;
+            if( options.inverse ) {
+              matches =
+                this
+                .store
+                .match( undefined, predicate, this.uri, graph || this.defaultGraph )
+                .map( ({subject}) => subject );
+            } else {
+              matches =
+                this
+                .store
+                .match( this.uri, predicate, undefined, graph || this.defaultGraph )
+                .map( ({object}) => object );
+            }
+
+            value =
+              matches
+              .map( (uri) => new options.model( uri, { store: this.store } ) );
             break;
           case undefined:
             value = response && response.value;
@@ -76,6 +97,12 @@ function integer( options = {} ) {
   return property( options );
 }
 
+function hasMany( options = {} ) {
+  options.type = "hasMany";
+  console.assert( options.model, "hasMany requires 'model' to be supplied" );
+  return property( options );
+}
+
 class SemanticModel {
   @tracked uri;
   store = null;
@@ -84,12 +111,15 @@ class SemanticModel {
 
   constructor( uri, options ){
     this.store = options.store;
-    this.defaultGraph = options.defaultGraph;
-    this.defaultNamespace = options.defaultNamespace;
+    if( options.defaultGraph )
+      this.defaultGraph = options.defaultGraph;
+    if( options.defaultNamespace )
+      this.defaultNamespace = options.defaultNamespace;
+
     this.uri = uri;
   }
 
 }
 
 export default SemanticModel;
-export { property, string, integer };
+export { property, string, integer, hasMany };

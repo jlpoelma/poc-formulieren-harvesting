@@ -1,9 +1,12 @@
+import SemanticModel, { string, integer, hasMany } from '../semantic-model';
+import Field from './field';
+import { FORM_GRAPH } from '../../utils/graphs';
 import { SHACL } from '../../utils/namespaces';
-import { tracked } from '@glimmer/tracking';
-import { get } from '@ember/object';
-import SemanticModel, { string, integer } from '../semantic-model';
 
 export default class FormPropertyGroupModel extends SemanticModel {
+  defaultGraph = FORM_GRAPH
+  defaultNamespace = SHACL
+
   @string()
   name = "";
 
@@ -13,12 +16,11 @@ export default class FormPropertyGroupModel extends SemanticModel {
   @string()
   description = "";
 
-  @tracked
+  @hasMany({ model: Field, predicate: SHACL("group"), inverse: true })
   fields = [];
   
-  constructor( uri, options ) {
-    const { store, formGraph } = options;
-    super( uri, { store, defaultGraph: formGraph, defaultNamespace: SHACL } );
+  constructor( uri, { store } ) {
+    super( uri, { store } );
   }
 
   get sortedFields(){
@@ -26,5 +28,4 @@ export default class FormPropertyGroupModel extends SemanticModel {
       .fields
       .sort( (a,b) => a.order > b.order );
   }
-  
 }
