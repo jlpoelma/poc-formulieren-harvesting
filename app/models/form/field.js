@@ -4,7 +4,6 @@ import SemanticModel, { property, string, integer } from '../semantic-model';
 
 export default class FormFieldModel extends SemanticModel {
   @string( { uri: SHACL("name") })
-  @tracked
   label = "";
 
   @string()
