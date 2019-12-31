@@ -1,23 +1,24 @@
 import { SHACL } from '../../utils/namespaces';
 import { tracked } from '@glimmer/tracking';
 import { get } from '@ember/object';
+import SemanticModel, { string, integer } from '../semantic-model';
 
-export default class FormPropertyGroupModel {
-  @tracked
-  label = "";
-  @tracked
-  order = "";
-  @tracked
+export default class FormPropertyGroupModel extends SemanticModel {
+  @string()
+  name = "";
+
+  @integer()
+  order = 0;
+
+  @string()
   description = "";
+
   @tracked
   fields = [];
   
   constructor( uri, options ) {
     const { store, formGraph } = options;
-
-    this.name = store.any( uri, SHACL("name"), undefined, formGraph ).value;
-    this.order = parseInt(store.any( uri, SHACL("order"), undefined, formGraph ).value);
-    this.description = store.any( uri, SHACL("description"), undefined, formGraph ).value;
+    super( uri, { store, defaultGraph: formGraph, defaultNamespace: SHACL } );
   }
 
   get sortedFields(){
