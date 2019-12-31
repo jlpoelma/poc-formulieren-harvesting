@@ -1,15 +1,17 @@
+import { tracked } from '@glimmer/tracking';
 import { SHACL, FORM } from '../../utils/namespaces';
 import SemanticModel, { property, string, integer } from '../semantic-model';
 
 export default class FormFieldModel extends SemanticModel {
   @string( { uri: SHACL("name") })
+  @tracked
   label = "";
 
   @string()
   description = "";
 
   @integer()
-  @tracked
+  // @tracked
   order = "";
 
   @string( { ns: FORM } )
