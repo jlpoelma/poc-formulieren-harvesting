@@ -1,5 +1,4 @@
 import SemanticModel, { string, integer, hasMany } from '../semantic-model';
-import Field from './field';
 import { FORM_GRAPH } from '../../utils/graphs';
 import { SHACL } from '../../utils/namespaces';
 
@@ -16,11 +15,11 @@ export default class FormPropertyGroupModel extends SemanticModel {
   @string()
   description = "";
 
-  @hasMany({ model: Field, predicate: SHACL("group"), inverse: true })
+  @hasMany({ model: "form/field", predicate: SHACL("group"), inverse: true })
   fields = [];
   
-  constructor( uri, { store } ) {
-    super( uri, { store } );
+  constructor( uri, options ) {
+    super( uri, options );
   }
 
   get sortedFields(){

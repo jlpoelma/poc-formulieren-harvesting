@@ -1,3 +1,5 @@
+import { inject as service } from '@ember/service';
+import { getOwner } from '@ember/application';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import Component from '@glimmer/component';
@@ -22,7 +24,7 @@ const SOURCE_NODE = new rdflib.NamedNode("http://mu.semte.ch/vocabularies/ext/be
 const META_GRAPH = new rdflib.NamedNode("http://mu.semte.ch/metagraph");
 
 export default class GimmeRdflibComponent extends Component {
-  store = null;
+  @service store;
 
   @tracked
   datasetTriples = [];
@@ -52,10 +54,10 @@ export default class GimmeRdflibComponent extends Component {
     return !this.smallTable;
   }
 
-  constructor(){
-    super(...arguments);
-    this.store = rdflib.graph();
-  }
+  // constructor(){
+  //   super(...arguments);
+  //   this.store.rdf = rdflib.graph();
+  // }
 
   get graphGroupedTriples(){
     let graphs = this
@@ -79,20 +81,17 @@ export default class GimmeRdflibComponent extends Component {
   @action
   loadData(){
     // this.store.clear();
-    rdflib.parse( dilbeek, this.store, "http://mu.semte.ch/dilbeek", "text/html" );
-    rdflib.parse( form, this.store, "http://mu.semte.ch/form", "text/turtle" );
-    rdflib.parse( documentTypeCodelist, this.store, "http://mu.semte.ch/metagraph", "text/turtle" );
+    rdflib.parse( dilbeek, this.store.graph, "http://mu.semte.ch/dilbeek", "text/html" );
+    rdflib.parse( form, this.store.graph, "http://mu.semte.ch/form", "text/turtle" );
+    rdflib.parse( documentTypeCodelist, this.store.graph, "http://mu.semte.ch/metagraph", "text/turtle" );
 
-    this.statements = this.store.statements;
-
-    // const BESLUIT = new rdflib.Namespace("http://data.vlaanderen.be/ns/besluit#");
-    // console.log(this.store.any(undefined, BESLUIT("bestuurt"), undefined));
+    this.statements = this.store.graph.statements;
   }
 
   @action
   findForms(){
     this.forms = this
-      .store
+      .store.graph
       .match(undefined, RDF("type"), FORM("Form"));
   }
 
@@ -102,7 +101,7 @@ export default class GimmeRdflibComponent extends Component {
       .forms
       .map( ({subject}) => {
         return this
-          .store
+          .store.graph
           .match(subject, undefined, undefined);
       });
 
@@ -116,7 +115,7 @@ export default class GimmeRdflibComponent extends Component {
     const SOURCE_NODE = new rdflib.NamedNode("http://mu.semte.ch/vocabularies/ext/besluitenlijsten/208ee6e0-28b1-11ea-972c-8915ff690069");
 
     this.datasetTriples = importTriplesForForm({
-      store: this.store,
+      store: this.store.graph,
       formGraph: FORM_GRAPH,
       sourceGraph: SOURCE_GRAPH,
       sourceNode: SOURCE_NODE,
@@ -133,9 +132,8 @@ export default class GimmeRdflibComponent extends Component {
 
   @action
   renderForms(){
-
     let fieldsUri = fieldsForForm({
-      store: this.store,
+      store: this.store.graph,
       formGraph: FORM_GRAPH,
       sourceGraph: SOURCE_GRAPH,
       sourceNode: SOURCE_NODE,
@@ -146,11 +144,11 @@ export default class GimmeRdflibComponent extends Component {
   }
 
   generateFormFieldData(uri){
-    let path = this.store.any( uri, SHACL("path"), undefined, FORM_GRAPH);
-    let displayType = this.store.any( uri, FORM("displayType"), undefined, FORM_GRAPH);
+    let path = this.store.graph.any( uri, SHACL("path"), undefined, FORM_GRAPH);
+    let displayType = this.store.graph.any( uri, FORM("displayType"), undefined, FORM_GRAPH);
 
     let values = triplesForPath({
-      store: this.store, path, formGraph: FORM_GRAPH, sourceNode: SOURCE_NODE, sourceGraph: SOURCE_GRAPH
+      store: this.store.graph, path, formGraph: FORM_GRAPH, sourceNode: SOURCE_NODE, sourceGraph: SOURCE_GRAPH
     }).values;
 
     return { uri, displayType, values };
@@ -161,7 +159,7 @@ export default class GimmeRdflibComponent extends Component {
   validateForms(){
 
     let fieldsUri = fieldsForForm({
-      store: this.store,
+      store: this.store.graph,
       formGraph: FORM_GRAPH,
       sourceGraph: SOURCE_GRAPH,
       sourceNode: SOURCE_NODE,
@@ -172,16 +170,16 @@ export default class GimmeRdflibComponent extends Component {
 
     for(let uri of fieldsUri){
 
-      let path = this.store.any( uri, SHACL("path"), undefined, FORM_GRAPH);
+      let path = this.store.graph.any( uri, SHACL("path"), undefined, FORM_GRAPH);
 
-      let validationConstraintUris = this.store
+      let validationConstraintUris = this.store.graph
                                          .match( uri, FORM("validations"), undefined, FORM_GRAPH)
                                          .map(t => t.object);
 
       let validationResults = [];
 
       for(let constraintUri of validationConstraintUris){
-        const options = { store: this.store, metaGraph: META_GRAPH, constraintUri: constraintUri };
+        const options = { store: this.store.graph, metaGraph: META_GRAPH, constraintUri: constraintUri };
         const validationResult = check( constraintUri, options);
         validationResults.push(validationResult);
       }
@@ -199,13 +197,24 @@ export default class GimmeRdflibComponent extends Component {
   @action
   getPropertyGroups() {
     let fieldUris = fieldsForForm({
-      store: this.store,
+      store: this.store.graph,
       formGraph: FORM_GRAPH,
       sourceGraph: SOURCE_GRAPH,
       sourceNode: SOURCE_NODE,
       metaGraph: META_GRAPH
     });
 
-    this.propertyGroups = createPropertyTreeFromFields( fieldUris, { store: this.store, formGraph: FORM_GRAPH } );
+    this.propertyGroups = createPropertyTreeFromFields( fieldUris, this.store, FORM_GRAPH );
+  }
+
+  lookupModel() {
+    const owner = getOwner(this);
+    console.log(owner);
+    const model = owner.lookup('model:semantic-model');
+    console.log(model);
+    const fieldModel = owner.lookup('model:form/field');
+    console.log(fieldModel);
+    const myFormField = new fieldModel("http://foo.bar.com/", { store: undefined });
+    console.log(myFormField);
   }
 }

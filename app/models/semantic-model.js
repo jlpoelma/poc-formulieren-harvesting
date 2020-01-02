@@ -1,3 +1,5 @@
+import { inject as service } from '@ember/service';
+import { setOwner, getOwner } from '@ember/application';
 import { tracked } from '@glimmer/tracking';
 import { get, set } from '@ember/object';
 import { XSD } from '../utils/namespaces';
@@ -25,7 +27,7 @@ function property(options = {}) {
       configurable: descriptor.configurable,
       get() {
         const predicate = calculatePredicate(this);
-        const response = options.inverse ? this.store.any(undefined, predicate, this.uri, graph || this.defaultGraph) : this.store.any(this.uri, predicate, undefined, graph || this.defaultGraph);
+        const response = options.inverse ? this.store.graph.any(undefined, predicate, this.uri, graph || this.defaultGraph) : this.store.graph.any(this.uri, predicate, undefined, graph || this.defaultGraph);
         let value;
         if( this[cacheKey] !== undefined ) {
           return get( this, cacheKey ); // register as a dependency
@@ -42,20 +44,22 @@ function property(options = {}) {
             if( options.inverse ) {
               matches =
                 this
-                .store
+                .store.graph
                 .match( undefined, predicate, this.uri, graph || this.defaultGraph )
                 .map( ({subject}) => subject );
             } else {
               matches =
                 this
-                .store
+                .store.graph
                 .match( this.uri, predicate, undefined, graph || this.defaultGraph )
                 .map( ({object}) => object );
             }
 
             value =
               matches
-              .map( (uri) => new options.model( uri, { store: this.store } ) );
+              .map( (uri) =>
+                    this.store.create( options.model, uri ) );
+                    // new options.model( uri, { store: this.store } ) );
             break;
           case undefined:
             value = response && response.value;
@@ -67,7 +71,7 @@ function property(options = {}) {
       },
       set(value) {
         const predicate = calculatePredicate(this);
-        this.store.removeMatches(this.uri, predicate, undefined, graph || this.defaultGraph);
+        this.store.graph.removeMatches(this.uri, predicate, undefined, graph || this.defaultGraph);
 
         let object;
         switch (options.type) {
@@ -80,7 +84,7 @@ function property(options = {}) {
         }
         object = object ? object : new rdflib.Literal( value );
 
-        this.store.addStatement( new rdflib.Statement( this.uri, predicate, object, graph || this.defaultGraph ) );
+        this.store.graph.addStatement( new rdflib.Statement( this.uri, predicate, object, graph || this.defaultGraph ) );
         set( this, cacheKey, value ); // update dependent key
       }
     };
@@ -105,12 +109,16 @@ function hasMany( options = {} ) {
 
 class SemanticModel {
   @tracked uri;
-  store = null;
   defaultGraph = null;
   defaultNamespace = null;
 
-  constructor( uri, options ){
-    this.store = options.store;
+  create(){
+    console.log(...arguments);
+  }
+
+  @service store;
+
+  constructor( uri, options = {} ){
     if( options.defaultGraph )
       this.defaultGraph = options.defaultGraph;
     if( options.defaultNamespace )

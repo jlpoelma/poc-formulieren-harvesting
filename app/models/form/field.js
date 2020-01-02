@@ -26,7 +26,7 @@ export default class FormFieldModel extends SemanticModel {
   @string( { ns: FORM } )
   options = "";
   
-  constructor( uri, { store } ) {
-    super(uri, { store });
+  constructor( uri, options ) {
+    super(uri, options);
   }
 }
