@@ -5,6 +5,10 @@ import { get, set } from '@ember/object';
 import { XSD } from '../utils/namespaces';
 import rdflib from '../utils/rdflib';
 
+function cacheKeyForAttr( attr ) {
+  return `#cache__${attr}`;
+}
+
 function property(options = {}) {
   const predicateUri = options.predicate;
   const graph = options.graph;
@@ -14,13 +18,18 @@ function property(options = {}) {
       return predicateUri || ( options.ns && options.ns( propertyName ) ) || entity.defaultNamespace( propertyName );
     };
 
-    const cacheKey = `cache__${propertyName}`;
+    const cacheKey = cacheKeyForAttr( propertyName );
+
+    // Object.defineProperty( self, cacheKey, { enumerable: false, writable: true } );
 
     // The current implementation does a get/set of the property
     // "cacheKey" which will make this autotrack the cached property.
     // As such we don't need to manually call notifyPropertyChange.
     // This does mean that we're trying to be smart about reading the
     // property so that we don't accidentally overlap.
+
+    self.attributes = self.attributes ? self.attributes : [];
+    self.attributes.push( propertyName );
 
     return {
       enumerable: descriptor.enumerable,
@@ -38,6 +47,9 @@ function property(options = {}) {
             break;
           case "integer":
             value = response && parseInt( response.value );
+            break;
+          case "term":
+            value = response;
             break;
           case "hasMany":
             var matches;
@@ -81,11 +93,20 @@ function property(options = {}) {
         case "integer":
           object = new rdflib.Literal( value, null, XSD("decimal") );
           break;
+        case "term":
+          object = value;
+          break;
         }
         object = object ? object : new rdflib.Literal( value );
 
         this.store.graph.addStatement( new rdflib.Statement( this.uri, predicate, object, graph || this.defaultGraph ) );
         set( this, cacheKey, value ); // update dependent key
+
+        // update the change listeners, if any
+        for( let listener of this.changeListeners )
+          listener( this, { updatedField: propertyName, newValue: value } );
+
+        return value;
       }
     };
   };
@@ -101,6 +122,11 @@ function integer( options = {} ) {
   return property( options );
 }
 
+function term( options = {} ) {
+  options.type = "term";
+  return property( options );
+}
+
 function hasMany( options = {} ) {
   options.type = "hasMany";
   console.assert( options.model, "hasMany requires 'model' to be supplied" );
@@ -111,6 +137,8 @@ class SemanticModel {
   @tracked uri;
   defaultGraph = null;
   defaultNamespace = null;
+
+  changeListeners = new Set();
 
   create(){
     console.log(...arguments);
@@ -127,7 +155,13 @@ class SemanticModel {
     this.uri = uri;
   }
 
+  addChangeListener( listener ) {
+    this.changeListeners.add( listener );
+  }
+  removeChangeListener( listener ) {
+    this.changeListeners.delete( listener );
+  }
 }
 
 export default SemanticModel;
-export { property, string, integer, hasMany };
+export { property, string, integer, hasMany, term };

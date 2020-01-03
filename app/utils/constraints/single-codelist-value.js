@@ -6,8 +6,7 @@ import { FORM, SKOS } from '../namespaces';
 
 export default function constraintsSingleCodelistValue(values, options) {
   const { constraintUri, store, metaGraph } = options;
-  const conceptSchemeUri = store.any( constraintUri, FORM("conceptScheme"), undefined);
-
+  const conceptSchemeUri = store.any( constraintUri, FORM("conceptScheme"), undefined );
   const matchingValues =
         values
         .filter( (value) => {

@@ -1,6 +1,5 @@
-import { tracked } from '@glimmer/tracking';
 import { SHACL, FORM } from '../../utils/namespaces';
-import SemanticModel, { property, string, integer } from '../semantic-model';
+import SemanticModel, { property, string, integer, term } from '../semantic-model';
 
 import { FORM_GRAPH } from '../../utils/graphs';
 
@@ -20,7 +19,7 @@ export default class FormFieldModel extends SemanticModel {
   @string( { ns: FORM } )
   displayType = "";
 
-  @string()
+  @term()
   path = "";
 
   @string( { ns: FORM } )
