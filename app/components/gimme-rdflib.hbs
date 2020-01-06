@@ -8,8 +8,8 @@
 <button type="button" {{on "click" this.validateForms}}>Validate forms</button>
 <button type="button" {{on "click" this.getPropertyGroups}}>Get propertygroups</button>
 
-
 <button type="button" {{on "click" this.toggleTableSize}}>{{#if this.smallTable}}expand{{else}}collapse{{/if}}</button>
+
 {{#each this.graphGroupedTriples as |graphInfo|}}
   <h2>{{graphInfo.graph}}</h2>
 

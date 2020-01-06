@@ -5,5 +5,10 @@ const FORM = new rdflib.Namespace("http://lblod.data.gift/vocabularies/forms/");
 const SHACL = new rdflib.Namespace("http://www.w3.org/ns/shacl#");
 const SKOS = new rdflib.Namespace("http://www.w3.org/2004/02/skos/core#");
 const XSD = new rdflib.Namespace("http://www.w3.org/2001/XMLSchema#");
+const VCARD = new rdflib.Namespace("http://www.w3.org/2006/vcard/ns#");
+const FOAF = new rdflib.Namespace("http://xmlns.com/foaf/0.1/");
+const LDP = new rdflib.Namespace("http://www.w3.org/ns/ldp#");
+const SP = new rdflib.Namespace("http://www.w3.org/ns/pim/space#");
+const SOLID = new rdflib.Namespace("http://www.w3.org/ns/solid/terms#");
 
-export { RDF, FORM, SHACL, SKOS, XSD };
+export { RDF, FORM, SHACL, SKOS, XSD, VCARD, FOAF, LDP, SP, SOLID };

@@ -1,0 +1,30 @@
+{{this.auth.webId}}
+
+{{#if this.auth.webId}}
+  <button type="button" {{on "click" this.fetchVcard}}>Fetch vcard</button>
+{{else}}
+  WebId not available, waiting for login.
+{{/if}}
+
+<div>
+  <dl>
+    <dt><label>name</label></dt>
+    <dd>{{this.me.name}}</dd>
+    <dt><label>formattedName</label></dt>
+    <dd>{{this.me.formattedName}}</dd>
+    <dt><label>organizationName</label></dt>
+    <dd>{{this.me.organizationName}}</dd>
+    <dt><label>inbox</label></dt>
+    <dd>{{this.me.inbox}}</dd>
+    <dt><label>preferencesFile</label></dt>
+    <dd>{{this.me.preferencesFile}}</dd>
+    <dt><label>storage</label></dt>
+    <dd>{{this.me.storage}}</dd>
+    <dt><label>account</label></dt>
+    <dd>{{this.me.account}}</dd>
+    <dt><label>privateTypeIndex</label></dt>
+    <dd>{{this.me.privateTypeIndex}}</dd>
+    <dt><label>publicTypeIndex</label></dt>
+    <dd>{{this.me.publicTypeIndex}}</dd>
+  </dl>
+</div>

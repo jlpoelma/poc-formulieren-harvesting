@@ -67,10 +67,12 @@ function property(options = {}) {
                 .map( ({object}) => object );
             }
 
+            const createOptions = { defaultGraph: options.propagateDefaultGraph ? this.defaultGraph : undefined };
+
             value =
               matches
               .map( (uri) =>
-                    this.store.create( options.model, uri ) );
+                    this.store.create( options.model, uri, createOptions ) );
                     // new options.model( uri, { store: this.store } ) );
             break;
           case undefined:
