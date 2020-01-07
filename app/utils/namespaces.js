@@ -10,5 +10,7 @@ const FOAF = new rdflib.Namespace("http://xmlns.com/foaf/0.1/");
 const LDP = new rdflib.Namespace("http://www.w3.org/ns/ldp#");
 const SP = new rdflib.Namespace("http://www.w3.org/ns/pim/space#");
 const SOLID = new rdflib.Namespace("http://www.w3.org/ns/solid/terms#");
+const DCT = new rdflib.Namespace("http://purl.org/dc/terms/");
+const TRACKER = new rdflib.Namespace("http://mu.semte.ch/tracker/");
 
-export { RDF, FORM, SHACL, SKOS, XSD, VCARD, FOAF, LDP, SP, SOLID };
+export { RDF, FORM, SHACL, SKOS, XSD, VCARD, FOAF, LDP, SP, SOLID, DCT, TRACKER };

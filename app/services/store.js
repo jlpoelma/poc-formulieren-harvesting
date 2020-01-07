@@ -22,7 +22,9 @@ export default class StoreService extends Service {
     // create a new instance
     const owner = getOwner(this);
     const klass = owner.lookup( `model:${model}` );
-    const instance = new klass( uri, options );
+    const createOptions = Object.assign({}, options);
+    createOptions.store = this;
+    const instance = new klass( uri, createOptions );
     setOwner( instance, owner );
     this.storeCacheForModel( model ).push( instance );
 

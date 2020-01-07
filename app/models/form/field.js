@@ -1,10 +1,12 @@
 import { SHACL, FORM } from '../../utils/namespaces';
-import SemanticModel, { property, string, integer, term } from '../semantic-model';
+import SemanticModel, { property, string, integer, term, belongsTo } from '../semantic-model';
+import {rdfType, defaultGraph} from '../semantic-model';
 
 import { FORM_GRAPH } from '../../utils/graphs';
 
+@defaultGraph(FORM_GRAPH)
+@rdfType(FORM("field"))
 export default class FormFieldModel extends SemanticModel {
-  defaultGraph = FORM_GRAPH;
   defaultNamespace = SHACL;
 
   @string( { predicate: SHACL("name") })
@@ -25,6 +27,9 @@ export default class FormFieldModel extends SemanticModel {
   @string( { ns: FORM } )
   options = "";
   
+  @belongsTo({ model: "form/property-group", inverseProperty: "fields" })
+  group = null;
+
   constructor( uri, options ) {
     super(uri, options);
   }

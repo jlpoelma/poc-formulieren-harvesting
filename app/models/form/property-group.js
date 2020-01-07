@@ -1,9 +1,11 @@
 import SemanticModel, { string, integer, hasMany } from '../semantic-model';
 import { FORM_GRAPH } from '../../utils/graphs';
-import { SHACL } from '../../utils/namespaces';
+import { SHACL, FORM } from '../../utils/namespaces';
+import {rdfType, defaultGraph} from '../semantic-model';
 
+@rdfType( FORM("PropertyGroup") )
+@defaultGraph( FORM_GRAPH )
 export default class FormPropertyGroupModel extends SemanticModel {
-  defaultGraph = FORM_GRAPH
   defaultNamespace = SHACL
 
   @string()
@@ -15,7 +17,7 @@ export default class FormPropertyGroupModel extends SemanticModel {
   @string()
   description = "";
 
-  @hasMany({ model: "form/field", predicate: SHACL("group"), inverse: true })
+  @hasMany({ model: "form/field", predicate: SHACL("group"), inverse: true, inverseProperty: "group" })
   fields = [];
   
   constructor( uri, options ) {
