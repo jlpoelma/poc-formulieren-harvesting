@@ -1,9 +1,12 @@
 import SemanticModel, { string, integer, hasMany } from '../semantic-model';
+import {rdfType} from '../semantic-model';
 
 // import { FORM_GRAPH } from '../../utils/graphs';
 // import { SHACL } from '../../utils/namespaces';
 import { TRACKER, DCT } from '../../utils/namespaces';
 
+
+@rdfType( TRACKER("Project") )
 export default class TimeTrackerProject extends SemanticModel {
   defaultNamespace = TRACKER
 

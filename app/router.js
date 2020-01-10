@@ -9,4 +9,5 @@ export default class Router extends EmberRouter {
 Router.map(function() {
   this.route('forms');
   this.route('solid');
+  this.route('time-tracker');
 });

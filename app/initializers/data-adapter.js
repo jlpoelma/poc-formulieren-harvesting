@@ -4,6 +4,7 @@ import { tracked } from '@glimmer/tracking';
 import Application from '@ember/application';
 import DebugDataAdapter from '@ember/debug/data-adapter';
 import SemanticModel from '../models/semantic-model';
+import { updateEmberArray } from '../utils/array-helpers';
 
 // import { get } from "ember-metal/property_get";
 // import run from "ember-metal/run_loop";
@@ -98,11 +99,7 @@ class SemanticDataAdapter extends DebugDataAdapter {
     var containerDebugAdapter = this.get('containerDebugAdapter');
     var types;
 
-    if (containerDebugAdapter.canCatalogEntriesByType('model')) {
-      types = containerDebugAdapter.catalogEntriesByType('model');
-    } else {
-      types = this._getObjectsOnNamespaces();
-    }
+    types = containerDebugAdapter.catalogEntriesByType('model');
 
     // New adapters return strings instead of classes
     types = A(types).map(function(name) {
@@ -137,14 +134,7 @@ class SemanticDataAdapter extends DebugDataAdapter {
     const records = this.get('store').storeCacheForModel( typeName );
     const arrProxy = this.recordsByTypeInEmberArr[typeName] || ArrayProxy.create({ content: A() });
 
-    const removeSet = new Set( arrProxy.content );
-    const addSet = new Set( records );
-
-    records.forEach( (i) => removeSet.delete(i) );
-    arrProxy.content.forEach( (i) => addSet.delete(i) );
-
-    arrProxy.removeObjects( Array.from(removeSet) );
-    arrProxy.addObjects( Array.from(addSet) );
+    updateEmberArray( arrProxy, records );
     this.recordsByTypeInEmberArr[typeName] = arrProxy;
   }
 

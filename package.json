@@ -67,6 +67,7 @@
     "edition": "octane"
   },
   "dependencies": {
+    "shortid": "^2.2.15",
     "solid-auth-client": "^2.4.1"
   }
 }

@@ -9,12 +9,24 @@ function cacheKeyForAttr( attr ) {
   return `#cache__${attr}`;
 }
 
+function graphForInstance( entity, propertyName ) {
+  const entityGraph = entity.store.getGraphForType( entity.modelName );
+  const defaultGraph = entity.defaultGraph;
+
+  if( property ) {
+    const options = entity.attributeDefinitions[propertyName];
+    return options.graph || entityGraph || defaultGraph;
+  } else {
+    return entityGraph || defaultGraph;
+  }
+}
+
 function calculatePropertyValue( target, propertyName ) {
   let value;
   const options = target.attributeDefinitions[propertyName];
   const predicate = calculatePredicateForProperty( target, propertyName );
-  const graph = options.graph;
-  const response = options.inverse ? target.store.graph.any(undefined, predicate, target.uri, graph || target.defaultGraph) : target.store.graph.any(target.uri, predicate, undefined, graph || target.defaultGraph);
+  const graph = graphForInstance( target, propertyName );
+  const response = options.inverse ? target.store.graph.any(undefined, predicate, target.uri, graph) : target.store.graph.any(target.uri, predicate, undefined, graph);
   
   const createRelatedRecordOptions = { defaultGraph: options.propagateDefaultGraph ? target.defaultGraph : undefined };
 
@@ -40,13 +52,13 @@ function calculatePropertyValue( target, propertyName ) {
       matches =
         target
         .store.graph
-        .match( undefined, predicate, target.uri, graph || target.defaultGraph )
+        .match( undefined, predicate, target.uri, graph )
         .map( ({subject}) => subject );
     } else {
       matches =
         target
         .store.graph
-        .match( target.uri, predicate, undefined, graph || target.defaultGraph )
+        .match( target.uri, predicate, undefined, graph )
         .map( ({object}) => object );
     }
 
@@ -76,7 +88,6 @@ function calculatePredicateForProperty( entity, propertyName ) {
 
 function property(options = {}) {
   const predicateUri = options.predicate;
-  const graph = options.graph;
 
   return function(self, propertyName, descriptor) {
     self.attributes = self.attributes ? self.attributes : [];
@@ -113,10 +124,10 @@ function property(options = {}) {
       },
       set(value) {
         const predicate = calculatePredicate(this);
-        const usedGraph = graph || this.defaultGraph;
+        const graph = graphForInstance( this, propertyName );
         const setRelationObject = function( object ) {
-          this.store.graph.removeMatches(this.uri, predicate, undefined, usedGraph);
-          this.store.graph.addStatement( new rdflib.Statement( this.uri, predicate, object, usedGraph ) );
+          this.store.graph.removeMatches(this.uri, predicate, undefined, graph);
+          this.store.graph.addStatement( new rdflib.Statement( this.uri, predicate, object, graph ) );
         }.bind(this);
 
         let object;
@@ -140,7 +151,7 @@ function property(options = {}) {
           const oldObjects = new Set(this[cacheKey] || []);
 
           if( !oldObjects ) // remove all values if we haven't cached them
-            this.store.graph.removeMatches( this.uri, predicate, undefined, usedGraph );
+            this.store.graph.removeMatches( this.uri, predicate, undefined, graph );
 
           const objectsToAdd = new Set( newObjects );
           oldObjects.forEach( (o) => objectsToAdd.delete( o ) );
@@ -148,10 +159,10 @@ function property(options = {}) {
           newObjects.forEach( (o) => objectsToRemove.delete( o ) );
           
           objectsToRemove.forEach( (obj) => {
-            this.store.graph.removeMatches( this.uri, predicate, obj.uri, usedGraph );
+            this.store.graph.removeMatches( this.uri, predicate, obj.uri, graph );
           } );
           objectsToAdd.forEach( (obj) => {
-            this.store.graph.addStatement( new rdflib.Statement( this.uri, predicate, obj.uri, usedGraph ) );
+            this.store.graph.addStatement( new rdflib.Statement( this.uri, predicate, obj.uri, graph ) );
           } );
 
           // invalidate inverse relations
@@ -210,6 +221,8 @@ class SemanticModel {
   @tracked uri;
   defaultNamespace = null;
 
+  modelName = null;
+
   changeListeners = new Set();
 
   create(){
@@ -242,13 +255,15 @@ class SemanticModel {
 
 function ensureResourceExists( entity, options ) {
   const rdfType = entity.rdfType;
+  // We cannot use graphForInstance here because the entity is not fully defined yet.
+  const targetGraph = options.store.getGraphForType( entity.modelName ) || entity.defaultGraph;
 
   if( entity.uri && rdfType ) {
     const matches =
           options
           .store
           .graph
-          .match(entity.uri, undefined, rdfType, entity.defaultGraph)
+          .match(entity.uri, undefined, rdfType, targetGraph)
           .filter( ({predicate}) => predicate.value == RDF("type").value )
           .length;
 
@@ -257,7 +272,7 @@ function ensureResourceExists( entity, options ) {
       .store
       .graph
       .addStatement(
-        new rdflib.Statement( entity.uri, RDF("type"), rdfType, entity.defaultGraph )
+        new rdflib.Statement( entity.uri, RDF("type"), rdfType, targetGraph )
       );
   }
 }
