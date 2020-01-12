@@ -1,5 +1,5 @@
 import Service from '@ember/service';
-import rdflib from '../utils/rdflib';
+import rdflib from 'ember-rdflib';
 import { getOwner, setOwner } from '@ember/application';
 import { RDF } from '../utils/namespaces';
 
@@ -12,7 +12,7 @@ function classForModel( owner, model ) {
 export default class StoreService extends Service {
   graph = null;
   fetcher = null;
-  updateManager = null;
+  updater = null;
 
   storeCache = {}
 
@@ -22,7 +22,7 @@ export default class StoreService extends Service {
     super(...arguments);
     this.graph = rdflib.graph();
     this.fetcher = new Fetcher( this.graph );
-    this.updateManager = new UpdateManager( this.graph );
+    this.updater = new UpdateManager( this.graph );
   }
 
   create( model, uri, options ) {
@@ -35,10 +35,10 @@ export default class StoreService extends Service {
     const klass = classForModel( owner, model );
     const createOptions = Object.assign({}, options);
     createOptions.store = this;
+    createOptions.modelName = model;
     const instance = new klass( uri, createOptions );
     setOwner( instance, owner );
     this.storeCacheForModel( model ).push( instance );
-    instance.modelName = model;
 
     // notify listeners
     for (let listener of this.changeListeners)
@@ -90,6 +90,20 @@ export default class StoreService extends Service {
   }
   getGraphForType(type) {
     return this.graphForType[type];
+  }
+
+  autosaveForType = {};
+  setAutosaveForType(type, autosave) {
+    this.autosaveForType[type] = autosave;
+  }
+  getAutosaveForType(type) {
+    const autosave = this.autosaveForType[type];
+
+    if( autosave !== undefined ) {
+      return autosave;
+    } else {
+      return classForModel( getOwner( this ), type ).autosave;
+    }
   }
 
   addChangeListener(listener) {

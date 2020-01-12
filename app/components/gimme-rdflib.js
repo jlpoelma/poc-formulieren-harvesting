@@ -3,7 +3,7 @@ import { getOwner } from '@ember/application';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import Component from '@glimmer/component';
-import rdflib from '../utils/rdflib';
+import rdflib from 'ember-rdflib';
 import dilbeek from '../utils/dilbeek';
 import form from '../utils/besluitenlijst-formulier';
 import documentTypeCodelist from '../utils/codelist/document-type';

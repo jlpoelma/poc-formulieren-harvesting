@@ -1,4 +1,4 @@
-import SemanticModel, { string, integer, hasMany } from '../semantic-model';
+import SemanticModel, { string, integer, hasMany, autosave } from '../semantic-model';
 import {rdfType} from '../semantic-model';
 
 // import { FORM_GRAPH } from '../../utils/graphs';
@@ -6,6 +6,7 @@ import {rdfType} from '../semantic-model';
 import { TRACKER, DCT } from '../../utils/namespaces';
 
 
+@autosave()
 @rdfType( TRACKER("Project") )
 export default class TimeTrackerProject extends SemanticModel {
   defaultNamespace = TRACKER

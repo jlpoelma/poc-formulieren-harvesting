@@ -3,7 +3,7 @@ import { setOwner, getOwner } from '@ember/application';
 import { tracked } from '@glimmer/tracking';
 import { get, set } from '@ember/object';
 import { XSD, RDF } from '../utils/namespaces';
-import rdflib from '../utils/rdflib';
+import rdflib from 'ember-rdflib';
 
 function cacheKeyForAttr( attr ) {
   return `#cache__${attr}`;
@@ -19,6 +19,25 @@ function graphForInstance( entity, propertyName ) {
   } else {
     return entityGraph || defaultGraph;
   }
+}
+
+function changeGraphTriples( entity, del, ins, options = {} ) {
+  return new Promise( function( resolve, reject ) {
+    const modelName = options.modelName || entity.modelName;
+    const store = options.store || entity.store;
+    if( modelName && store.getAutosaveForType( modelName ) ) {
+      // push the data
+      store.updater.update( del, ins, (uri, ok, message, response) => {
+        if (ok) resolve( uri, message, response );
+        else reject( uri, message, response ); // TODO: revert property update and recover
+      } );
+    } else {
+      // store the data through the graph
+      store.graph.addAll( ins );
+      store.graph.removeStatements( del );
+      resolve();
+    }
+  } );
 }
 
 function calculatePropertyValue( target, propertyName ) {
@@ -126,8 +145,11 @@ function property(options = {}) {
         const predicate = calculatePredicate(this);
         const graph = graphForInstance( this, propertyName );
         const setRelationObject = function( object ) {
-          this.store.graph.removeMatches(this.uri, predicate, undefined, graph);
-          this.store.graph.addStatement( new rdflib.Statement( this.uri, predicate, object, graph ) );
+          const del = this.store.graph.statementsMatching( this.uri, predicate, undefined, graph );
+          const ins = [ new rdflib.Statement( this.uri, predicate, object, graph ) ];
+          changeGraphTriples( this, del, ins )
+            .then( (uri, message, response) => console.log(`Success updating: ${message}`) )
+            .catch( (uri, message, response) => alert(message) );
         }.bind(this);
 
         let object;
@@ -150,8 +172,15 @@ function property(options = {}) {
           const newObjects = new Set(value);
           const oldObjects = new Set(this[cacheKey] || []);
 
-          if( !oldObjects ) // remove all values if we haven't cached them
+          let statementsToRemove = [];
+          let statementsToAdd = [];
+
+          if( !oldObjects ) {
+            // remove all values if we haven't cached them
+            // TODO: this case is not supported for now
+            console.error("Not removing matches in remote store which might exist");
             this.store.graph.removeMatches( this.uri, predicate, undefined, graph );
+          }
 
           const objectsToAdd = new Set( newObjects );
           oldObjects.forEach( (o) => objectsToAdd.delete( o ) );
@@ -159,16 +188,21 @@ function property(options = {}) {
           newObjects.forEach( (o) => objectsToRemove.delete( o ) );
           
           objectsToRemove.forEach( (obj) => {
-            this.store.graph.removeMatches( this.uri, predicate, obj.uri, graph );
+            statementsToRemove.push( new rdflib.Statement( this.uri, predicate, obj.uri, graph ) );
           } );
           objectsToAdd.forEach( (obj) => {
-            this.store.graph.addStatement( new rdflib.Statement( this.uri, predicate, obj.uri, graph ) );
+            statementsToAdd.push( new rdflib.Statement( this.uri, predicate, obj.uri, graph ) );
           } );
+
+          changeGraphTriples( this, statementsToRemove, statementsToAdd )
+            .then( (uri, message, response ) => console.log(`Success updating: ${message}`) )
+            .catch( (uri, message, response ) => alert(message) ); // TODO: revert property update and recover
 
           // invalidate inverse relations
           [...objectsToAdd, ...objectsToRemove].forEach( (obj) => {
             if( options.inverseProperty ) updatePropertyValue( obj, options.inverseProperty );
           } );
+          break;
         case "term":
           setRelationObject( object );
           break;
@@ -236,6 +270,9 @@ class SemanticModel {
       this.defaultGraph = options.defaultGraph || this.constructor.defaultGraph;
     if( options.defaultNamespace )
       this.defaultNamespace = options.defaultNamespace;
+    if( options.modelName ) {
+      this.modelName = options.modelName;
+    }
 
     this.uri = uri;
 
@@ -268,12 +305,13 @@ function ensureResourceExists( entity, options ) {
           .length;
 
     if( matches == 0 )
-      options
-      .store
-      .graph
-      .addStatement(
-        new rdflib.Statement( entity.uri, RDF("type"), rdfType, targetGraph )
-      );
+      changeGraphTriples(
+        this,
+        [],
+        [ new rdflib.Statement( entity.uri, RDF("type"), rdfType, targetGraph ) ],
+        options )
+      .then( (uri, message, response) => console.log(`Success updating: ${message}`) )
+      .catch( (uri, message, response ) => alert(message) );
   }
 }
 
@@ -289,6 +327,12 @@ function defaultGraph(graphUri) {
   };
 }
 
+function autosave( bool = true ) {
+  return function(klass) {
+    klass.autosave = bool;
+  };
+}
+
 export default SemanticModel;
 export { property, string, integer, dateTime, hasMany, belongsTo, term };
-export { rdfType, defaultGraph };
+export { rdfType, defaultGraph, autosave };
