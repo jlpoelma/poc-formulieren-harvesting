@@ -23,6 +23,13 @@ function graphForInstance( entity, propertyName ) {
 }
 
 function changeGraphTriples( entity, del, ins, options = {} ) {
+  const validStatement = function(statement) {
+    return statement.subject.value !== null && statement.predicate.value !== null && statement.object.value !== null;
+  };
+
+  del = del.filter( validStatement );
+  ins = ins.filter( validStatement );
+  
   return new Promise( function( resolve, reject ) {
     const modelName = options.modelName || entity.modelName;
     const store = options.store || entity.store;

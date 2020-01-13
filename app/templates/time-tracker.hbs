@@ -2,18 +2,18 @@
 
 <h1>Tracking stuff on SOLID</h1>
 
-<TimeTracker::DataLoader as |loader|>
+<TimeTracker::DataLoader @onLoadProjects={{fn (mut this.projects)}} as |loader|>
   <button type="button" {{on "click" loader.load}}>Load Projects</button>
 
   {{loader.location}}
   {{#if loader.location}}
     <button type="button" {{on "click" loader.fetchProjectsArray}}>Fetch Projects</button>
   {{/if}}
-
-  {{#each loader.projects as |project|}}
-    <div>{{project.name}}</div>
-  {{/each}}
 </TimeTracker::DataLoader>
+
+{{#each this.sortedProjects as |project|}}
+  <TimeTracker::Project::Update @project={{project}} />
+{{/each}}
 
 New project:
 <TimeTracker::Entry::Project />

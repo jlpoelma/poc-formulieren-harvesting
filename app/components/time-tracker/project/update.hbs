@@ -1,0 +1,9 @@
+<form class="project entry" {{on "submit" this.submit}}>
+  <label>
+    Project name <Input @value={{this.projectName}} @placeholder="Megacorp Website" />
+  </label>
+  <label>
+    Order <Input @value={{this.projectOrder}} @type="number" @placeholder="0" />
+  </label>
+  <button type="submit">submit</button>
+</form>

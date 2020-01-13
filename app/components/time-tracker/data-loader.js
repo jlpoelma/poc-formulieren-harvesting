@@ -74,5 +74,8 @@ export default class TimeTrackerDataLoaderComponent extends Component {
   @action
   fetchProjectsArray() {
     this.projectsArray = this.store.all( "time-tracker/project" );
+
+    if( this.args.onLoadProjects )
+      this.args.onLoadProjects( this.projectsArray );
   }
 }
