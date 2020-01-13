@@ -3,12 +3,13 @@ import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 import rdflib from 'ember-rdflib';
+import env from '../../config/environment';
 
 const { Fetcher, namedNode } = rdflib;
 
 export default class SolidCardInfoComponent extends Component {
   @service("solid/auth") auth;
-  @service store;
+  @service(env.RSTORE.name) store;
 
   @tracked
   me = null;

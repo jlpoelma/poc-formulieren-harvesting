@@ -5,6 +5,7 @@ import Application from '@ember/application';
 import DebugDataAdapter from '@ember/debug/data-adapter';
 import SemanticModel from '../models/semantic-model';
 import { updateEmberArray } from '../utils/array-helpers';
+import env from '../config/environment';
 
 // import { get } from "ember-metal/property_get";
 // import run from "ember-metal/run_loop";
@@ -72,8 +73,7 @@ class SemanticDataAdapter extends DebugDataAdapter {
   @tracked
   containerDebugAdapter = null;
 
-  @service
-  store
+  @service(env.RSTORE.name) store;
 
   recordsByTypeInEmberArr = {};
 
@@ -196,6 +196,7 @@ class SemanticDataAdapter extends DebugDataAdapter {
 
 export default {
   name: "data-adapter",
+  after: "rdf-store",
   initialize( application ) {
     application.register('data-adapter:main', SemanticDataAdapter);
   }

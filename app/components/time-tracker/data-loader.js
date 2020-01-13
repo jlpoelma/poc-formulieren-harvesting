@@ -4,11 +4,12 @@ import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 import rdflib from 'ember-rdflib';
 import { TRACKER, SOLID, RDF } from '../../utils/namespaces';
+import env from '../../config/environment';
 
 const { Fetcher, namedNode } = rdflib;
 
 export default class TimeTrackerDataLoaderComponent extends Component {
-  @service store
+  @service( env.RSTORE.name ) store;
   @service("solid/auth") auth;
 
   @tracked

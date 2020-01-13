@@ -13,6 +13,7 @@ import { RDF, FORM, SHACL } from '../utils/namespaces';
 import constraintForUri from '../utils/constraints';
 import { check } from '../utils/constraints';
 import { createPropertyTreeFromFields } from '../utils/model-factory';
+import env from "../config/environment";
 
 const dedup = function(arr){
   return [...new Set(arr)];
@@ -24,7 +25,7 @@ const SOURCE_NODE = new rdflib.NamedNode("http://mu.semte.ch/vocabularies/ext/be
 const META_GRAPH = new rdflib.NamedNode("http://mu.semte.ch/metagraph");
 
 export default class GimmeRdflibComponent extends Component {
-  @service store;
+  @service(env.RSTORE.name) store;
 
   @tracked
   datasetTriples = [];

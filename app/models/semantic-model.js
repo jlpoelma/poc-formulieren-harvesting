@@ -4,6 +4,7 @@ import { tracked } from '@glimmer/tracking';
 import { get, set } from '@ember/object';
 import { XSD, RDF } from '../utils/namespaces';
 import rdflib from 'ember-rdflib';
+import env from '../config/environment';
 
 function cacheKeyForAttr( attr ) {
   return `#cache__${attr}`;
@@ -263,7 +264,7 @@ class SemanticModel {
     console.log(...arguments);
   }
 
-  @service store;
+  @service(env.RSTORE.name) store;
 
   constructor( uri, options = {} ){
     if( options.defaultGraph || this.constructor.defaultGraph )

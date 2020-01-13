@@ -3,11 +3,11 @@ import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 import Component from '@glimmer/component';
 import shortid from 'shortid';
+import env from '../../../config/environment';
 
 export default class TimeTrackerEntryProjectComponent extends Component {
 
-  @service
-  store
+  @service( env.RSTORE.name ) store;
 
   @tracked
   name = "";

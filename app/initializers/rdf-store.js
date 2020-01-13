@@ -2,6 +2,7 @@ import Service from '@ember/service';
 import rdflib from 'ember-rdflib';
 import { getOwner, setOwner } from '@ember/application';
 import { RDF } from '../utils/namespaces';
+import env from '../config/environment';
 
 const { Fetcher, UpdateManager } = rdflib;
 
@@ -9,7 +10,7 @@ function classForModel( owner, model ) {
   return owner.lookup( `model:${model}` );
 }
 
-export default class StoreService extends Service {
+class StoreService extends Service {
   graph = null;
   fetcher = null;
   updater = null;
@@ -114,3 +115,12 @@ export default class StoreService extends Service {
     this.changeListeners.remove( listener );
   }
 }
+
+export function initialize( application ) {
+  application.register(`service:${env.RSTORE.name}`, StoreService, { singleton: true, instantiate: true });
+}
+
+export default {
+  initialize,
+  name: "rdf-store",
+};
