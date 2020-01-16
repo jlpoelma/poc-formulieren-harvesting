@@ -1,9 +1,33 @@
-<form class="project entry" {{on "submit" this.submit}}>
-  <label>
-    Project name <Input @value={{this.projectName}} @placeholder="Megacorp Website" />
-  </label>
-  <label>
-    Order <Input @value={{this.projectOrder}} @type="number" @placeholder="0" />
-  </label>
-  <button type="submit">submit</button>
-</form>
+<div class="project entry">
+  <button type="button" {{on "click" (fn (mut this.showTimeline) (not this.showTimeline))}}>
+    [
+    {{#if this.showTimeline}}
+      +
+    {{else}}
+      -
+    {{/if}}
+    ]
+  </button>
+  <form style="display: inline;" {{on "submit" this.submit}}>
+    <label>
+      Project name <Input @value={{this.projectName}} @placeholder="Megacorp Website" />
+    </label>
+    <label>
+      Order <Input @value={{this.projectOrder}} @type="number" @placeholder="0" />
+    </label>
+    <button type="submit">submit</button>
+  </form>
+
+  {{#if this.showTimeline}}
+    <ul>
+      {{#each @project.timeLinesByDay as |timeLineTiming|}}
+        <li>
+          <TimeTracker::TimeLine::TimingSummary @timeLineTiming={{timeLineTiming}} />
+        </li>
+      {{/each}}
+    </ul>
+
+    <TimeTracker::TimeLine::Entry @project={{@project}} />
+  {{/if}}
+</div>
+

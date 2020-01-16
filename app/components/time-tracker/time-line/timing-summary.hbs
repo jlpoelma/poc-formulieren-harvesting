@@ -1,0 +1,20 @@
+<div>
+  <button type="button" {{on "click" (fn (mut this.open) (not this.open))}}>[{{#if this.open}}+{{else}}-{{/if}}]</button>
+  {{this.displayDate}} (spent {{this.displayTimeSpent}})
+</div>
+
+<ul>
+  {{#if this.open}}
+    {{#each @timeLineTiming.sortedTimeLines as |timeLine|}}
+      <li>
+        <TimeTracker::TimeLine::Update @timeLine={{timeLine}} />
+      </li>
+    {{/each}}
+  {{else}}
+    {{#each @timeLineTiming.openTimeLines as |timeLine|}}
+      <li>
+        <TimeTracker::TimeLine::Update @timeLine={{timeLine}} />
+      </li>
+    {{/each}}
+  {{/if}}
+</ul>

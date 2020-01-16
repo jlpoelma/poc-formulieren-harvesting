@@ -1,3 +1,4 @@
+import { tracked } from '@glimmer/tracking';
 import SemanticModel, { string, integer, hasMany, autosave } from '../semantic-model';
 import {rdfType} from '../semantic-model';
 
@@ -5,6 +6,37 @@ import {rdfType} from '../semantic-model';
 // import { SHACL } from '../../utils/namespaces';
 import { TRACKER, DCT } from '../../utils/namespaces';
 
+class TimeLineTiming {
+  @tracked
+  date
+
+  @tracked
+  timeLines
+
+  constructor( date, timeLines ){
+    this.timeLines = timeLines;
+    this.date = date;
+  }
+
+  get totalTime(){
+    return this.timeLines.reduce(
+      ( (sum, timeLine) => sum + timeLine.timeSpent ),
+      0 );
+  }
+
+  get sortedTimeLines(){
+    console.log(`Calculating sorted timelines based on ${this.timelines && this.timelines.length} timelines`);
+    return this
+      .timeLines
+      .sort( (a,b) => a.startedAt < b.startedAt );
+  }
+
+  get openTimeLines(){
+    return this
+      .timeLines
+      .filter( (timeLine) => !timeLine.endedAt );
+  }
+}
 
 @autosave()
 @rdfType( TRACKER("Project") )
@@ -17,6 +49,20 @@ export default class TimeTrackerProject extends SemanticModel {
   @integer()
   order = 0;
 
-  @hasMany({ model: "time-tracker/time-line", property: TRACKER("hasProject"), inverse: true, inverseProperty: "project" })
+  @hasMany({ model: "time-tracker/time-line", predicate: TRACKER("hasProject"), inverse: true, inverseProperty: "project" })
   timeLines = [];
+
+  get timeLinesByDay(){
+    let intermediateIndex = {};
+
+    for( const timeLine of this.timeLines ){
+      const key = timeLine.startedAt.toDateString();
+      intermediateIndex[key] = intermediateIndex[key] || [];
+      intermediateIndex[key].pushObject( timeLine );
+    }
+
+    return Object.keys( intermediateIndex )
+      .sort( (a,b) => new Date(a) > new Date(b) )
+      .map( (key) => new TimeLineTiming( new Date(key), intermediateIndex[key] ) );
+  }
 }

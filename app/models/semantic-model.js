@@ -39,12 +39,12 @@ function changeGraphTriples( entity, del, ins, options = {} ) {
         if (ok) resolve( uri, message, response );
         else reject( uri, message, response ); // TODO: revert property update and recover
       } );
-    } else {
-      // store the data through the graph
-      store.graph.addAll( ins );
-      store.graph.removeStatements( del );
-      resolve();
     }
+    
+    // store the data through the graph immediately
+    store.graph.addAll( ins );
+    store.graph.removeStatements( del );
+    resolve();
   } );
 }
 
@@ -68,7 +68,7 @@ function calculatePropertyValue( target, propertyName ) {
     value = response;
     break;
   case "dateTime":
-    value = response && new Date(value);
+    value = response && new Date( response.value );
     break;
   case "belongsTo":
     value = response && target.store.create( options.model, response, createRelatedRecordOptions );

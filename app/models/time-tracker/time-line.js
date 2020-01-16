@@ -18,4 +18,10 @@ export default class TimeTrackerTimeLine extends SemanticModel {
 
   @belongsTo( {model: "time-tracker/project", predicate: TRACKER("hasProject"), inverseProperty: "timeLines" } )
   project;
+
+  get timeSpent(){
+    const maybeEnd = this.endedAt || new Date();
+    return maybeEnd - this.startedAt;
+  }
+
 }

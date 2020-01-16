@@ -9,6 +9,9 @@ export default class TimeTrackerProjectUpdateComponent extends Component {
   @tracked
   order = null;
   
+  @tracked
+  showTimeline
+
   get projectName(){
     return this.name || (this.args.project && this.args.project.name);
   }
@@ -28,5 +31,4 @@ export default class TimeTrackerProjectUpdateComponent extends Component {
     this.args.project.name = this.projectName;
     this.args.project.order = this.projectOrder;
   }
-  
 }

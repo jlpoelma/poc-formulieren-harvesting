@@ -1,0 +1,6 @@
+{{#if @timeLine.endedAt}}
+  <TimeTracker::TimeLine::ShowTimeRange @timeLine={{@timeLine}} />
+{{else}}
+  <TimeTracker::TimeLine::ShowTimeSince @date={{@timeLine.startedAt}} />
+  <button type="button" {{on "click" (fn this.stopTimeLine @timeLine)}}>Stop</button>
+{{/if}}
