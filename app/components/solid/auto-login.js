@@ -7,6 +7,11 @@ export default class SolidAutoLoginComponent extends Component {
 
   constructor(){
     super(...arguments);
-    this.auth.ensureLogin();
+    this.initializeLoginAndAuth();
+  }
+
+  async initializeLoginAndAuth(){
+    await this.auth.ensureLogin();
+    await this.auth.ensureTypeIndex();
   }
 }

@@ -1,11 +1,15 @@
-import SemanticModel, { string, integer, dateTime, hasMany, belongsTo, autosave } from '../semantic-model';
+import SemanticModel, { string, integer, dateTime, hasMany, belongsTo, autosave, solid } from '../semantic-model';
 import {rdfType} from '../semantic-model';
 
 // import { FORM_GRAPH } from '../../utils/graphs';
 // import { SHACL } from '../../utils/namespaces';
 import { TRACKER, DCT } from '../../utils/namespaces';
 
-@autosave()
+@solid({
+  defaultStorageLocation: "/private/tests/tracker.ttl",
+  private: true
+})
+@autosave( true )
 @rdfType( TRACKER("TimeLine") )
 export default class TimeTrackerTimeLine extends SemanticModel {
   defaultNamespace = TRACKER

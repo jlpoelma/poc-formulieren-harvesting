@@ -1,13 +1,34 @@
 import Service from '@ember/service';
 import rdflib from 'ember-rdflib';
 import { getOwner, setOwner } from '@ember/application';
-import { RDF } from '../utils/namespaces';
+import { RDF, SOLID } from '../utils/namespaces';
 import env from '../config/environment';
 
 const { Fetcher, UpdateManager } = rdflib;
 
 function classForModel( owner, model ) {
   return owner.lookup( `model:${model}` );
+}
+
+function findTypeRegistrationInGraph( type, store, typeGraph ) {
+  return store
+    .graph
+    .match( undefined, RDF("type"), SOLID("TypeRegistration"), typeGraph )
+    .map( ({subject: typeIndexSpec}) => {
+      const hasProjectType =
+            store
+            .graph
+            .match( typeIndexSpec, SOLID("forClass"), undefined, typeGraph )
+            .filter( ({object}) => object.value == type.value )
+            .length;
+      const location =
+            store
+            .graph
+            .any( typeIndexSpec, SOLID("instance"), undefined, typeGraph );
+
+      return hasProjectType ? location : false;
+    })
+    .find( (x) => x );
 }
 
 class StoreService extends Service {
@@ -18,6 +39,10 @@ class StoreService extends Service {
   storeCache = {}
 
   changeListeners = new Set();
+
+  privateTypeIndex = null;
+  publicTypeIndex = null;
+  me = null;
 
   constructor() {
     super(...arguments);
@@ -79,10 +104,43 @@ class StoreService extends Service {
     if( !klass.rdfType )
       console.error( `Tried to fetch all instances of ${model} but it has no @rdfType annotation.` );
 
+    const sourceGraph = this.discoverDefaultGraphByType( klass );
+
+    console.log(sourceGraph);
+
     return this
       .graph
-      .match( undefined, RDF("type"), klass.rdfType, this.getGraphForType( model ) || model.defaultGraph )
+      .match( undefined, RDF("type"), klass.rdfType, sourceGraph )
       .map( ({subject}) => this.create( model, subject ) );
+  }
+
+  async fetchGraphForType( model ) {
+    const klass = classForModel( getOwner( this ), model );
+    if( !klass.rdfType )
+      console.error( `Tried to fetch all instances of ${model} but it has no @rdfType annotation.` );
+
+    const sourceGraph = this.discoverDefaultGraphByType( klass );
+
+    await this.fetcher.load( sourceGraph );
+  }
+
+  discoverDefaultGraphByType( constructor ) {
+    let discoveredSolidGraph = null;
+
+    if( constructor.solid.private )
+      discoveredSolidGraph = findTypeRegistrationInGraph( constructor.rdfType, this, this.privateTypeIndex );
+    else
+      discoveredSolidGraph = findTypeRegistrationInGraph( constructor.rdfType, this, this.publicTypeIndex );
+
+    // TODO: if a defaultStorageLocation was set, and the type was not
+    // found in the type index, write the storage location the correct
+    // type index.
+
+    let absoluteGraph = constructor.solid.defaultStorageLocation
+        && this.me
+        && this.graph.namedNode( new URL( constructor.solid.defaultStorageLocation, this.me.doc().value ).href );
+
+    return discoveredSolidGraph || absoluteGraph || this.contructor.defaultGraph;
   }
 
   graphForType = {}

@@ -1,6 +1,6 @@
 import { tracked } from '@glimmer/tracking';
 import SemanticModel, { string, integer, hasMany, autosave } from '../semantic-model';
-import {rdfType} from '../semantic-model';
+import {rdfType, solid} from '../semantic-model';
 
 // import { FORM_GRAPH } from '../../utils/graphs';
 // import { SHACL } from '../../utils/namespaces';
@@ -38,6 +38,11 @@ class TimeLineTiming {
   }
 }
 
+// @autosave()
+@solid({
+  defaultStorageLocation: "/private/tests/tracker.ttl",
+  private: true
+})
 @autosave()
 @rdfType( TRACKER("Project") )
 export default class TimeTrackerProject extends SemanticModel {

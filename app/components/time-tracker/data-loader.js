@@ -20,55 +20,14 @@ export default class TimeTrackerDataLoaderComponent extends Component {
 
   @action
   async loadData(){
-    const graph = this.store.graph;
-    const me = graph.sym( this.auth.webId );
-
     const fetcher = new Fetcher( this.store.graph );
+    const me = this.store.graph.sym( this.auth.webId );
     await fetcher.load( me.doc() );
-    console.log("Fetched me");
-
+    await this.auth.ensureTypeIndex();
+    const graph = this.store.graph;
     this.me = this.store.create('solid/person', me, { defaultGraph: me.doc() });
-
-    const privateTypeIndex = graph.any( me, SOLID("privateTypeIndex"), undefined, me.doc() );
-
-    if( !privateTypeIndex ) {
-      console.error("No private type index found");
-      return;
-    }
-
-    // fetch the type index
-    await fetcher.load( privateTypeIndex );
-    console.log("Fetched private type index");
-    console.log(privateTypeIndex);
-    
-    const projectLocation =
-          graph.match( undefined, RDF("type"), SOLID("TypeRegistration"), privateTypeIndex )
-          .map( ({subject: typeIndexSpec}) => {
-            const hasProjectType =
-                  graph
-                  .match( typeIndexSpec, SOLID("forClass"), undefined, privateTypeIndex )
-                  .filter( ({object}) => object.value == TRACKER("Project").value )
-                  .length;
-            const location = graph.any( typeIndexSpec, SOLID("instance"), undefined, privateTypeIndex );
-
-            if( hasProjectType ) return location;
-            else return false;
-          })
-          .find( (x) => x );
-
-    if( !projectLocation ) {
-      console.error("No project location found");
-    }
-
-    console.log("Project location found:");
-    console.log( projectLocation );
-
-    await fetcher.load( projectLocation );
-
-    this.store.setGraphForType( "time-tracker/project", projectLocation );
-    this.store.setGraphForType( "time-tracker/time-line", projectLocation );
-
-    this.projectLocation = projectLocation;
+    await this.store.fetchGraphForType( "time-tracker/project" );
+    await this.store.fetchGraphForType( "time-tracker/time-line" );
   }
 
   @action

@@ -4,11 +4,7 @@
 
 <TimeTracker::DataLoader @onLoadProjects={{fn (mut this.projects)}} as |loader|>
   <button type="button" {{on "click" loader.load}}>Load Projects</button>
-
-  {{loader.location}}
-  {{#if loader.location}}
-    <button type="button" {{on "click" loader.fetchProjectsArray}}>Fetch Projects</button>
-  {{/if}}
+  <button type="button" {{on "click" loader.fetchProjectsArray}}>Fetch Projects</button>
 </TimeTracker::DataLoader>
 
 {{#each this.sortedProjects as |project|}}

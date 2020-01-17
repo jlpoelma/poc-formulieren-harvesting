@@ -2,7 +2,7 @@ import { inject as service } from '@ember/service';
 import { setOwner, getOwner } from '@ember/application';
 import { tracked } from '@glimmer/tracking';
 import { get, set } from '@ember/object';
-import { XSD, RDF } from '../utils/namespaces';
+import { XSD, RDF, SOLID } from '../utils/namespaces';
 import rdflib from 'ember-rdflib';
 import env from '../config/environment';
 
@@ -36,6 +36,7 @@ function changeGraphTriples( entity, del, ins, options = {} ) {
     if( modelName && store.getAutosaveForType( modelName ) ) {
       // push the data
       store.updater.update( del, ins, (uri, ok, message, response) => {
+        console.log("Saved data");
         if (ok) resolve( uri, message, response );
         else reject( uri, message, response ); // TODO: revert property update and recover
       } );
@@ -274,8 +275,14 @@ class SemanticModel {
   @service(env.RSTORE.name) store;
 
   constructor( uri, options = {} ){
-    if( options.defaultGraph || this.constructor.defaultGraph )
-      this.defaultGraph = options.defaultGraph || this.constructor.defaultGraph;
+    const store = options.store;
+
+    if( options.defaultGraph )
+      this.defaultGraph = options.defaultGraph;
+    else if( this.constructor.solid ) {
+      this.defaultGraph = options.store.discoverDefaultGraphByType( this.constructor );
+    }
+
     if( options.defaultNamespace )
       this.defaultNamespace = options.defaultNamespace;
     if( options.modelName ) {
@@ -341,6 +348,12 @@ function autosave( bool = true ) {
   };
 }
 
+function solid( options ) {
+  return function(klass) {
+    klass.solid = options;
+  };
+}
+
 export default SemanticModel;
-export { property, string, integer, dateTime, hasMany, belongsTo, term };
+export { property, string, integer, dateTime, hasMany, belongsTo, term, solid };
 export { rdfType, defaultGraph, autosave };
