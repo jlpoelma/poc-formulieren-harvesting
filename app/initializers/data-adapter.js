@@ -160,7 +160,6 @@ class SemanticDataAdapter extends DebugDataAdapter {
   }
 
   wrapModelType() {
-    console.log(...arguments);
     return super.wrapModelType(...arguments);
   }
 

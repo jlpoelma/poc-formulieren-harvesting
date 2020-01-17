@@ -106,8 +106,6 @@ class StoreService extends Service {
 
     const sourceGraph = this.discoverDefaultGraphByType( klass );
 
-    console.log(sourceGraph);
-
     return this
       .graph
       .match( undefined, RDF("type"), klass.rdfType, sourceGraph )

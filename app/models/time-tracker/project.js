@@ -25,7 +25,6 @@ class TimeLineTiming {
   }
 
   get sortedTimeLines(){
-    console.log(`Calculating sorted timelines based on ${this.timelines && this.timelines.length} timelines`);
     return this
       .timeLines
       .sort( (a,b) => a.startedAt < b.startedAt );

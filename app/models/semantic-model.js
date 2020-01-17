@@ -36,7 +36,6 @@ function changeGraphTriples( entity, del, ins, options = {} ) {
     if( modelName && store.getAutosaveForType( modelName ) ) {
       // push the data
       store.updater.update( del, ins, (uri, ok, message, response) => {
-        console.log("Saved data");
         if (ok) resolve( uri, message, response );
         else reject( uri, message, response ); // TODO: revert property update and recover
       } );
