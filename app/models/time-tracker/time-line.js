@@ -6,7 +6,7 @@ import {rdfType} from '../semantic-model';
 import { TRACKER, DCT } from '../../utils/namespaces';
 
 @solid({
-  defaultStorageLocation: "/private/tests/tracker.ttl",
+  defaultStorageLocation: "/private/tests/tracker-timelines.ttl",
   private: true
 })
 @autosave( true )

@@ -10,13 +10,21 @@ function cacheKeyForAttr( attr ) {
   return `#cache__${attr}`;
 }
 
+function graphForType( type, store ) {
+  return store.discoverDefaultGraphByType( store.classForModel( type ) );
+}
+
 function graphForInstance( entity, propertyName ) {
   const entityGraph = entity.store.getGraphForType( entity.modelName );
   const defaultGraph = entity.defaultGraph;
 
-  if( property ) {
+  if( propertyName ) {
     const options = entity.attributeDefinitions[propertyName];
-    return options.graph || entityGraph || defaultGraph;
+    if( options.model && options.inverse ) {
+      return graphForType( options.model, entity.store );
+    } else {
+      return options.graph || entityGraph || defaultGraph;
+    }
   } else {
     return entityGraph || defaultGraph;
   }
@@ -76,10 +84,12 @@ function calculatePropertyValue( target, propertyName ) {
   case "hasMany":
     var matches;
     if( options.inverse ) {
+      let sourceGraph = graphForType( options.model, target.store );
+
       matches =
         target
         .store.graph
-        .match( undefined, predicate, target.uri, graph )
+        .match( undefined, predicate, target.uri, sourceGraph )
         .map( ({subject}) => subject );
     } else {
       matches =

@@ -22,6 +22,8 @@ export default class TimeTrackerEntryProjectComponent extends Component {
     project.order = parseInt(this.order);
     this.name = "";
     this.order = undefined;
+
+    if( this.args.onCreate ) this.args.onCreate( project );
   }
   
 }

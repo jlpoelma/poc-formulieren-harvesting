@@ -112,6 +112,10 @@ class StoreService extends Service {
       .map( ({subject}) => this.create( model, subject ) );
   }
 
+  classForModel( model ) {
+    return classForModel( getOwner( this ), model );
+  }
+
   async fetchGraphForType( model ) {
     const klass = classForModel( getOwner( this ), model );
     if( !klass.rdfType )
@@ -119,7 +123,12 @@ class StoreService extends Service {
 
     const sourceGraph = this.discoverDefaultGraphByType( klass );
 
-    await this.fetcher.load( sourceGraph );
+    try {
+      await this.fetcher.load( sourceGraph );
+    } catch(e){
+      console.log(`Failed to fetch ${sourceGraph.value}`);
+      console.log(e);
+    }
   }
 
   discoverDefaultGraphByType( constructor ) {
