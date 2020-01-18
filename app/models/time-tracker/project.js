@@ -42,7 +42,6 @@ class TimeLineTiming {
   defaultStorageLocation: "/private/tests/tracker.ttl",
   private: true
 })
-@autosave()
 @rdfType( TRACKER("Project") )
 export default class TimeTrackerProject extends SemanticModel {
   defaultNamespace = TRACKER

@@ -9,7 +9,7 @@ import { TRACKER, DCT } from '../../utils/namespaces';
   defaultStorageLocation: "/private/tests/tracker-timelines.ttl",
   private: true
 })
-@autosave( true )
+// @autosave( true )
 @rdfType( TRACKER("TimeLine") )
 export default class TimeTrackerTimeLine extends SemanticModel {
   defaultNamespace = TRACKER

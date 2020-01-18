@@ -3,8 +3,9 @@ import rdflib from 'ember-rdflib';
 import { getOwner, setOwner } from '@ember/application';
 import { RDF, SOLID } from '../utils/namespaces';
 import env from '../config/environment';
+import ForkableStore from '../utils/forking-store';
 
-const { Fetcher, UpdateManager } = rdflib;
+const { namedNode } = rdflib;
 
 function classForModel( owner, model ) {
   return owner.lookup( `model:${model}` );
@@ -12,18 +13,15 @@ function classForModel( owner, model ) {
 
 function findTypeRegistrationInGraph( type, store, typeGraph ) {
   return store
-    .graph
     .match( undefined, RDF("type"), SOLID("TypeRegistration"), typeGraph )
     .map( ({subject: typeIndexSpec}) => {
       const hasProjectType =
             store
-            .graph
             .match( typeIndexSpec, SOLID("forClass"), undefined, typeGraph )
             .filter( ({object}) => object.value == type.value )
             .length;
       const location =
             store
-            .graph
             .any( typeIndexSpec, SOLID("instance"), undefined, typeGraph );
 
       return hasProjectType ? location : false;
@@ -32,9 +30,7 @@ function findTypeRegistrationInGraph( type, store, typeGraph ) {
 }
 
 class StoreService extends Service {
-  graph = null;
-  fetcher = null;
-  updater = null;
+  store = null;
 
   storeCache = {}
 
@@ -46,10 +42,17 @@ class StoreService extends Service {
 
   constructor() {
     super(...arguments);
-    this.graph = rdflib.graph();
-    this.fetcher = new Fetcher( this.graph );
-    this.updater = new UpdateManager( this.graph );
+    this.store = new ForkableStore();
   }
+
+  match() { return this.store.match( ...arguments ); }
+  any() { return this.store.any( ...arguments ); }
+  addAll() { return this.store.addAll( ...arguments ); }
+  removeStatements() { return this.store.removeStatements( ...arguments ); }
+  removeMatches() { return this.store.removeMatches( ...arguments ); }
+  async load(source) { return await this.store.load( source ); }
+  async update(deletes, inserts) { return await this.store.update( deletes, inserts ); }
+  async persist() { return await this.store.persist(); }
 
   create( model, uri, options ) {
     // check the cache
@@ -107,7 +110,6 @@ class StoreService extends Service {
     const sourceGraph = this.discoverDefaultGraphByType( klass );
 
     return this
-      .graph
       .match( undefined, RDF("type"), klass.rdfType, sourceGraph )
       .map( ({subject}) => this.create( model, subject ) );
   }
@@ -124,7 +126,7 @@ class StoreService extends Service {
     const sourceGraph = this.discoverDefaultGraphByType( klass );
 
     try {
-      await this.fetcher.load( sourceGraph );
+      await this.load( sourceGraph );
     } catch(e){
       console.log(`Failed to fetch ${sourceGraph.value}`);
       console.log(e);
@@ -145,7 +147,7 @@ class StoreService extends Service {
 
     let absoluteGraph = constructor.solid.defaultStorageLocation
         && this.me
-        && this.graph.namedNode( new URL( constructor.solid.defaultStorageLocation, this.me.doc().value ).href );
+        && namedNode( new URL( constructor.solid.defaultStorageLocation, this.me.doc().value ).href );
 
     return discoveredSolidGraph || absoluteGraph || this.contructor.defaultGraph;
   }

@@ -4,6 +4,9 @@ import { action } from '@ember/object';
 import Component from '@glimmer/component';
 import shortid from 'shortid';
 import env from '../../../config/environment';
+import rdflib from 'ember-rdflib';
+
+const { namedNode } = rdflib;
 
 export default class TimeTrackerEntryProjectComponent extends Component {
 
@@ -17,7 +20,7 @@ export default class TimeTrackerEntryProjectComponent extends Component {
   @action
   createProject(event){
     event.preventDefault();
-    const project = this.store.create("time-tracker/project", this.store.graph.namedNode(`http://mu.semte.ch/time-tracker/projects/${shortid.generate()}`));
+    const project = this.store.create("time-tracker/project", namedNode(`http://mu.semte.ch/time-tracker/projects/${shortid.generate()}`));
     project.name = this.name;
     project.order = parseInt(this.order);
     this.name = "";

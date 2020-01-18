@@ -5,7 +5,7 @@ import auth from 'solid-auth-client';
 import rdflib from 'ember-rdflib';
 import { SOLID } from '../../utils/namespaces';
 
-const { Fetcher } = rdflib;
+const { sym } = rdflib;
 
 export default class SolidAuthService extends Service {
   @tracked
@@ -13,12 +13,6 @@ export default class SolidAuthService extends Service {
 
   @service
   store;
-
-  @tracked
-  publicTypeIndex = null;
-
-  @tracked
-  privateTypeIndex = null;
 
   async ensureLogin(){
     let session = await auth.currentSession();
@@ -31,22 +25,20 @@ export default class SolidAuthService extends Service {
   }
 
   async ensureTypeIndex(){
-    const graph = this.store.graph;
-    const me = graph.sym( this.webId );
+    const me = sym( this.webId );
 
-    const fetcher = new Fetcher( graph );
-    await fetcher.load( me.doc() );
+    await this.store.load( me.doc() );
     // this.me = this.store.create('solid/person', me, { defaultGraph: me.doc() });
 
-    const privateTypeIndex = graph.any( me, SOLID("privateTypeIndex"), undefined, me.doc() );
-    const publicTypeIndex = graph.any( me, SOLID("publicTypeIndex"), undefined, me.doc() );
+    const privateTypeIndex = this.store.any( me, SOLID("privateTypeIndex"), undefined, me.doc() );
+    const publicTypeIndex = this.store.any( me, SOLID("publicTypeIndex"), undefined, me.doc() );
 
     this.store.privateTypeIndex = privateTypeIndex;
     this.store.publicTypeIndex = publicTypeIndex;
     this.store.me = me;
 
-    await fetcher.load( privateTypeIndex );
-    await fetcher.load( publicTypeIndex );
+    await this.store.load( privateTypeIndex );
+    await this.store.load( publicTypeIndex );
   }
 
   get webId(){

@@ -2,6 +2,8 @@
 
 <h1>Tracking stuff on SOLID</h1>
 
+<button type="button" {{on "click" this.save}}>Save changes</button>
+
 {{#each this.sortedProjects as |project|}}
   <TimeTracker::Project::Update @project={{project}} />
 {{/each}}

@@ -4,7 +4,7 @@ import Route from '@ember/routing/route';
 import rdflib from 'ember-rdflib';
 import env from '../config/environment';
 
-const { Fetcher, namedNode } = rdflib;
+const { sym } = rdflib;
 
 export default class TimeTrackerRoute extends Route {
   @service( env.RSTORE.name ) store;
@@ -22,8 +22,8 @@ export default class TimeTrackerRoute extends Route {
   }
 
   async loadData(){
-    const me = this.store.graph.sym( this.auth.webId );
-    await this.store.fetcher.load( me.doc() );
+    const me = sym( this.auth.webId );
+    await this.store.load( me.doc() );
     await this.auth.ensureTypeIndex();
     this.store.create('solid/person', me, { defaultGraph: me.doc() }); // TODO: do we need this
     await this.store.fetchGraphForType( "time-tracker/project" );

@@ -6,6 +6,12 @@ import { XSD, RDF, SOLID } from '../utils/namespaces';
 import rdflib from 'ember-rdflib';
 import env from '../config/environment';
 
+const { Statement } = rdflib;
+
+function sendAlert( message ) {
+  console.error( ...arguments ); // TODO: these happen too much, fix in ForkingStore
+}
+
 function cacheKeyForAttr( attr ) {
   return `#cache__${attr}`;
 }
@@ -30,7 +36,7 @@ function graphForInstance( entity, propertyName ) {
   }
 }
 
-function changeGraphTriples( entity, del, ins, options = {} ) {
+async function changeGraphTriples( entity, del, ins, options = {} ) {
   const validStatement = function(statement) {
     return statement.subject.value !== null && statement.predicate.value !== null && statement.object.value !== null;
   };
@@ -38,22 +44,16 @@ function changeGraphTriples( entity, del, ins, options = {} ) {
   del = del.filter( validStatement );
   ins = ins.filter( validStatement );
   
-  return new Promise( function( resolve, reject ) {
-    const modelName = options.modelName || entity.modelName;
-    const store = options.store || entity.store;
-    if( modelName && store.getAutosaveForType( modelName ) ) {
-      // push the data
-      store.updater.update( del, ins, (uri, ok, message, response) => {
-        if (ok) resolve( uri, message, response );
-        else reject( uri, message, response ); // TODO: revert property update and recover
-      } );
-    }
+  const modelName = options.modelName || entity.modelName;
+  const store = options.store || entity.store;
+  if( modelName && store.getAutosaveForType( modelName ) ) {
+    // push the data
+    await store.update( del, ins );
+  }
     
-    // store the data through the graph immediately
-    store.graph.addAll( ins );
-    store.graph.removeStatements( del );
-    resolve();
-  } );
+  // store the data through the graph immediately
+  store.addAll( ins );
+  store.removeStatements( del );
 }
 
 function calculatePropertyValue( target, propertyName ) {
@@ -61,7 +61,7 @@ function calculatePropertyValue( target, propertyName ) {
   const options = target.attributeDefinitions[propertyName];
   const predicate = calculatePredicateForProperty( target, propertyName );
   const graph = graphForInstance( target, propertyName );
-  const response = options.inverse ? target.store.graph.any(undefined, predicate, target.uri, graph) : target.store.graph.any(target.uri, predicate, undefined, graph);
+  const response = options.inverse ? target.store.any(undefined, predicate, target.uri, graph) : target.store.any(target.uri, predicate, undefined, graph);
   
   const createRelatedRecordOptions = { defaultGraph: options.propagateDefaultGraph ? target.defaultGraph : undefined };
 
@@ -88,13 +88,13 @@ function calculatePropertyValue( target, propertyName ) {
 
       matches =
         target
-        .store.graph
+        .store
         .match( undefined, predicate, target.uri, sourceGraph )
         .map( ({subject}) => subject );
     } else {
       matches =
         target
-        .store.graph
+        .store
         .match( target.uri, predicate, undefined, graph )
         .map( ({object}) => object );
     }
@@ -163,11 +163,11 @@ function property(options = {}) {
         const predicate = calculatePredicate(this);
         const graph = graphForInstance( this, propertyName );
         const setRelationObject = function( object ) {
-          const del = this.store.graph.statementsMatching( this.uri, predicate, undefined, graph );
-          const ins = [ new rdflib.Statement( this.uri, predicate, object, graph ) ];
+          const del = this.store.match( this.uri, predicate, undefined, graph );
+          const ins = [ new Statement( this.uri, predicate, object, graph ) ];
           changeGraphTriples( this, del, ins )
             .then( (uri, message, response) => console.log(`Success updating: ${message}`) )
-            .catch( (uri, message, response) => alert(message) );
+            .catch( (message, uri, response) => sendAlert(message, { uri, message, response }) );
         }.bind(this);
 
         let object;
@@ -197,7 +197,7 @@ function property(options = {}) {
             // remove all values if we haven't cached them
             // TODO: this case is not supported for now
             console.error("Not removing matches in remote store which might exist");
-            this.store.graph.removeMatches( this.uri, predicate, undefined, graph );
+            this.store.removeMatches( this.uri, predicate, undefined, graph );
           }
 
           const objectsToAdd = new Set( newObjects );
@@ -214,7 +214,7 @@ function property(options = {}) {
 
           changeGraphTriples( this, statementsToRemove, statementsToAdd )
             .then( (uri, message, response ) => console.log(`Success updating: ${message}`) )
-            .catch( (uri, message, response ) => alert(message) ); // TODO: revert property update and recover
+            .catch( (message, uri, response ) => sendAlert(message, { uri, message, response }) ); // TODO: revert property update and recover
 
           // invalidate inverse relations
           [...objectsToAdd, ...objectsToRemove].forEach( (obj) => {
@@ -323,7 +323,6 @@ function ensureResourceExists( entity, options ) {
     const matches =
           options
           .store
-          .graph
           .match(entity.uri, undefined, rdfType, targetGraph)
           .filter( ({predicate}) => predicate.value == RDF("type").value )
           .length;
@@ -335,7 +334,7 @@ function ensureResourceExists( entity, options ) {
         [ new rdflib.Statement( entity.uri, RDF("type"), rdfType, targetGraph ) ],
         options )
       .then( (uri, message, response) => console.log(`Success updating: ${message}`) )
-      .catch( (uri, message, response ) => alert(message) );
+      .catch( (message, uri, response ) => sendAlert(message, { uri, message, response }) );
   }
 }
 
