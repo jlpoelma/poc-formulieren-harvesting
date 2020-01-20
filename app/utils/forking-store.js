@@ -48,7 +48,8 @@ export default class ForkingStore {
    * Parses content from a file into a specified graph.
    */
   parse( content, graph, format ) {
-    rdflib.parse( content, this.graph, graph, format );
+    const graphValue = graph.termType == 'NamedNode' ? graph.value : graph;
+    rdflib.parse( content, this.graph, graphValue , format );
   }
 
   /**
