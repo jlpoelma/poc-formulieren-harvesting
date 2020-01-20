@@ -76,12 +76,13 @@ export default class ForkingStore {
       const delMatch = this.graph.match( subject, predicate, object, delGraphFor( graph ) );
 
       return [ ...mainMatch, ...addMatch ]
-        .filter( (quad) => ! delMatch.find( (del) => del.equals( quad ) ) );
+        .filter( (quad) => ! delMatch.find( (del) => del.equals( quad ) ) )
+        .map( (quad) => statementInGraph( quad, graph ) );
     } else {
       // TODO: this code path is normally unused in our cases,
       // implement it for debugging scenarios.
 
-      return this.graph.match( subject, predicate, object );      
+      return this.graph.match( subject, predicate, object );
     }
   }
 
@@ -217,6 +218,4 @@ export default class ForkingStore {
   deregisterObserver( key ) {
     delete this.observers[key];
   }
-
-
 }
