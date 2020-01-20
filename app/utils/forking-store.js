@@ -3,13 +3,19 @@ import rdflib from 'ember-rdflib';
 const { Fetcher, UpdateManager, namedNode, Statement } = rdflib;
 const BASE_GRAPH_STRING = "http://mu.semte.ch/libraries/rdf-store";
 
-function additionGraphFor( graph ) {
+/**
+ * Yields the graphs which contains additions.
+ */
+function addGraphFor( graph ) {
   const base = `${BASE_GRAPH_STRING}/graphs/add`;
   const graphQueryParam = encodeURIComponent( graph.value );
   return namedNode( `${base}?for=${graphQueryParam}` );
 }
 
-function removalGraphFor( graph ) {
+/**
+ * Yieldsthe graph which contains removals.
+ */
+function delGraphFor( graph ) {
   const base = `${BASE_GRAPH_STRING}/graphs/del`;
   const graphQueryParam = encodeURIComponent( graph.value );
   return namedNode( `${base}?for=${graphQueryParam}` );
@@ -39,13 +45,20 @@ export default class ForkingStore {
   }
 
   /**
+   * Parses content from a file into a specified graph.
+   */
+  parse( content, graph, format ) {
+    rdflib.parse( content, this.graph, graph, format );
+  }
+
+  /**
    * Perform a match on the graph.
    */
   match( subject, predicate, object, graph ) {
     if( graph ) {
       const mainMatch = this.graph.match( subject, predicate, object, graph );
-      const addMatch = this.graph.match( subject, predicate, object, additionGraphFor( graph ) );
-      const delMatch = this.graph.match( subject, predicate, object, removalGraphFor( graph ) );
+      const addMatch = this.graph.match( subject, predicate, object, addGraphFor( graph ) );
+      const delMatch = this.graph.match( subject, predicate, object, delGraphFor( graph ) );
 
       return [ ...mainMatch, ...addMatch ]
         .filter( (quad) => ! delMatch.find( (del) => del.equals( quad ) ) );
@@ -82,9 +95,9 @@ export default class ForkingStore {
   addAll( inserts ) {
     console.log({inserts});
     for( const ins of inserts ) {
-      this.graph.add( statementInGraph( ins, additionGraphFor( ins.graph ) ) );
+      this.graph.add( statementInGraph( ins, addGraphFor( ins.graph ) ) );
       try {
-        this.graph.remove( statementInGraph( ins, removalGraphFor( ins.graph ) ) );
+        this.graph.remove( statementInGraph( ins, delGraphFor( ins.graph ) ) );
       } catch (e) {
         // this is okay!  the statement may not exist
       }
@@ -94,9 +107,9 @@ export default class ForkingStore {
   removeStatements( deletes ) {
     console.log({deletes});
     for( const del of deletes ) {
-      this.graph.add( statementInGraph( del, removalGraphFor( del.graph ) ) );
+      this.graph.add( statementInGraph( del, delGraphFor( del.graph ) ) );
       try {
-        this.graph.remove( statementInGraph( del, additionGraphFor( del.graph ) ) );
+        this.graph.remove( statementInGraph( del, addGraphFor( del.graph ) ) );
       } catch (e) {
         // this is okay!  the statement may not exist
       }
@@ -140,19 +153,19 @@ export default class ForkingStore {
   async pushGraphChanges( graph ) {
     const deletes =
           this
-          .match( null, null, null, removalGraphFor( graph ) )
+          .match( null, null, null, delGraphFor( graph ) )
           .map( (statement) => statementInGraph( statement, graph ) );
 
     const inserts =
           this
-          .match( null, null, null, additionGraphFor( graph ) )
+          .match( null, null, null, addGraphFor( graph ) )
           .map( (statement) => statementInGraph( statement, graph ) );
 
     try {
       await this.update( deletes, inserts );
     } finally {
-      this.removeMatches( null, null, null, removalGraphFor( graph ) );
-      this.removeMatches( null, null, null, additionGraphFor( graph ) );
+      this.removeMatches( null, null, null, delGraphFor( graph ) );
+      this.removeMatches( null, null, null, addGraphFor( graph ) );
     }
   }
 
