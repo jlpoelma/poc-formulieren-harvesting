@@ -25,15 +25,29 @@ function statementInGraph( quad, graph ) {
   return new Statement( quad.subject, quad.predicate, quad.object, graph );
 }
 
+function informObservers( payload, forkingStore ) {
+  for( const observerKey in forkingStore.observers ) {
+    try {
+      forkingStore.observers[observerKey]( payload );
+    } catch(e) {
+      console.error(`Something went wrong during the callback of observer ${ observerKey }`);
+      console.error( e );
+    }
+  }
+};
+
 export default class ForkingStore {
   graph = null;
   fetcher = null;
   updater = null;
 
+  observers = null;
+
   constructor(){
     this.graph = rdflib.graph();
     this.fetcher = new Fetcher( this.graph );
     this.updater = new UpdateManager( this.graph );
+    this.observers = {};
   }
 
   /**
@@ -94,7 +108,6 @@ export default class ForkingStore {
   }
 
   addAll( inserts ) {
-    console.log({inserts});
     for( const ins of inserts ) {
       this.graph.add( statementInGraph( ins, addGraphFor( ins.graph ) ) );
       try {
@@ -103,10 +116,10 @@ export default class ForkingStore {
         // this is okay!  the statement may not exist
       }
     }
+    informObservers( { inserts }, this );
   }
 
   removeStatements( deletes ) {
-    console.log({deletes});
     for( const del of deletes ) {
       this.graph.add( statementInGraph( del, delGraphFor( del.graph ) ) );
       try {
@@ -115,6 +128,7 @@ export default class ForkingStore {
         // this is okay!  the statement may not exist
       }
     }
+    informObservers( { deletes }, this );
   }
 
   removeMatches( subject, predicate, object, graph ) {
@@ -189,4 +203,20 @@ export default class ForkingStore {
         resolve, reject );
     } );
   }
+
+  /**
+   * Registers an observer, optionally with a key.  The observer will
+   * be called with objects of the shape { deletes, inserts } for any
+   * change that is passed through `this.update`.
+   */
+  registerObserver( observer, key ) {
+    key = key || observer;
+    this.observers[key] = observer;
+  }
+
+  deregisterObserver( key ) {
+    delete this.observers[key];
+  }
+
+
 }

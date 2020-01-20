@@ -28,5 +28,4 @@ export default class TimeTrackerEntryProjectComponent extends Component {
 
     if( this.args.onCreate ) this.args.onCreate( project );
   }
-  
 }
