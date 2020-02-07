@@ -300,3 +300,5 @@ export default class ForkingStore {
     delete this.observers[key];
   }
 }
+
+export { addGraphFor, delGraphFor }
