@@ -30,6 +30,7 @@ function mergedGraphFor( graph ) {
   return namedNode( `${base}?for=${graphQueryParam}` );
 }
 
+
 function statementInGraph( quad, graph ) {
   return new Statement( quad.subject, quad.predicate, quad.object, graph );
 }
@@ -65,6 +66,29 @@ export default class ForkingStore {
   async load(source){
     // TODO: should we remove our changes when a graph is being reloaded?
     await this.fetcher.load( source );
+  }
+
+  loadDataWithAddAndDelGraph(content, graph, additions, removals, format){
+    const graphValue = graph.termType == 'NamedNode' ? graph.value : graph;
+    rdflib.parse( content, this.graph, graphValue , format );
+    if(additions){
+      rdflib.parse( additions, this.graph, addGraphFor( graph ).value, format );
+    }
+    if(removals){
+      rdflib.parse( removals, this.graph, delGraphFor( graph ).value, format );
+    }
+  }
+
+  serializeDataWithAddAndDelGraph(graph, format = 'text/turtle'){
+    return {
+      graph: rdflib.serialize(graph, this.graph, format),
+      additions: rdflib.serialize(addGraphFor(graph), this.graph, format),
+      removals: rdflib.serialize(delGraphFor(graph), this.graph, format)
+    };
+  }
+
+  serializeDataMergedGraph(graph, format = 'text/turtle'){
+    return rdflib.serialize(this.mergedGraph(graph), this.graph, format);
   }
 
   /**
