@@ -237,11 +237,13 @@ export default class ForkingStore {
     // add baseContent
     baseContent.forEach( (statement) => this.graph.add( statement ) );
     // remove stuff
-    delContent.forEach( (statement) => this.graph.remove( statement ) );
+    delContent.forEach( (statement) => {
+      try { this.graph.remove( statement ); } catch(e) {};
+    } );
     // add stuff
     addContent.forEach( (statement) => this.graph.add( statement ) );
 
-    return graph;
+    return mergedGraph;
   }
 
   async pushGraphChanges( graph ) {
