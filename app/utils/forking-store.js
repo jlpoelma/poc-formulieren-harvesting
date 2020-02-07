@@ -276,6 +276,7 @@ export default class ForkingStore {
 
   /**
    * Promise based version of update protocol
+   * private
    */
   update( deletes, inserts ) {
     return new Promise( ( resolve, reject ) =>  {
