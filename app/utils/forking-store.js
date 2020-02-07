@@ -80,16 +80,28 @@ export default class ForkingStore {
       const mainMatch = this.graph.match( subject, predicate, object, graph );
       const addMatch = this.graph.match( subject, predicate, object, addGraphFor( graph ) );
       const delMatch = this.graph.match( subject, predicate, object, delGraphFor( graph ) );
-
       return [ ...mainMatch, ...addMatch ]
-        .filter( (quad) => ! delMatch.find( (del) => del.equals( quad ) ) )
-        .map( (quad) => statementInGraph( quad, graph ) );
+        .filter( (quad) => ! delMatch.find( (del) => this.equalTriples( del, quad ) ) ) // remove statments in delete graph
+        .map( (quad) => statementInGraph( quad, graph ) ) // map them to the requested graph
+        .reduce( (acc, quad) => { // find uniques
+          if(! acc.find( accQuad => this.equalTriples( accQuad, quad) )){
+            acc.push(quad);
+          }
+          return acc;
+        }, []);
     } else {
       // TODO: this code path is normally unused in our cases,
       // implement it for debugging scenarios.
 
       return this.graph.match( subject, predicate, object );
     }
+  }
+
+  /**
+   * internal to compare triples
+   */
+  equalTriples(a, b){
+    return a.subject.equals(b.subject) && a.predicate.equals(b.predicate) && a.object.equals(b.object);
   }
 
   /**
