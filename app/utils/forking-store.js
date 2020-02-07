@@ -7,8 +7,9 @@ const BASE_GRAPH_STRING = "http://mu.semte.ch/libraries/rdf-store";
  * Yields the graphs which contains additions.
  */
 function addGraphFor( graph ) {
+  const graphValue = graph.termType == 'NamedNode' ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/add`;
-  const graphQueryParam = encodeURIComponent( graph.value );
+  const graphQueryParam = encodeURIComponent( graphValue );
   return namedNode( `${base}?for=${graphQueryParam}` );
 }
 
@@ -16,14 +17,16 @@ function addGraphFor( graph ) {
  * Yieldsthe graph which contains removals.
  */
 function delGraphFor( graph ) {
+  const graphValue = graph.termType == 'NamedNode' ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/del`;
-  const graphQueryParam = encodeURIComponent( graph.value );
+  const graphQueryParam = encodeURIComponent( graphValue );
   return namedNode( `${base}?for=${graphQueryParam}` );
 }
 
 function mergedGraphFor( graph ) {
+  const graphValue = graph.termType == 'NamedNode' ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/merged`;
-  const graphQueryParam = encodeURIComponent( graph.value );
+  const graphQueryParam = encodeURIComponent( graphValue );
   return namedNode( `${base}?for=${graphQueryParam}` );
 }
 
