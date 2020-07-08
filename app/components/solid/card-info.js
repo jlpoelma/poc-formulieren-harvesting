@@ -16,12 +16,15 @@ export default class SolidCardInfoComponent extends Component {
 
   @action
   async fetchVcard(){
-    const graph = this.store.graph;
+    const graph = this.store.store.graph;
     const me = graph.sym( this.auth.webId );
-    
-    const fetcher = new Fetcher( this.store.graph );
+
+    const fetcher = new Fetcher( graph );
     console.log( await fetcher.load( me ) );
+    console.log(graph);
+    console.log(me.doc());
 
     this.me = this.store.create('solid/person', me, { defaultGraph: me.doc() } );
+    console.log(this.me);
   }
 }
